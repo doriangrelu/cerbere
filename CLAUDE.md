@@ -29,7 +29,7 @@ Résumé : `api-gateway` (routage) → `cerbere-bff` (agrégation REST) → `cer
 
 Détail complet : [docs/best-practices/coding-standards.md](docs/best-practices/coding-standards.md) et [docs/best-practices/clean-architecture.md](docs/best-practices/clean-architecture.md).
 
-Résumé : clean architecture stricte par module (`domain`/`application`/`infrastructure`/`adapter`), SOLID, `final` systématique (paramètres, variables locales, champs — y compris `this.` obligatoire sur tout accès à un champ/méthode d'instance), records pour les value objects/événements/DTOs, suffixe systématique par rôle (`UseCase`/`Service`/`Repository`/`Document`/`Envelope`/... — voir tableau dans coding-standards.md), JavaDoc obligatoire sur `domain`, pas de commentaires qui répètent le code. Un module `contract` partagé (records/DTOs communs) est autorisé entre services quand un second consommateur en a besoin — voir [ADR 0010](docs/adr/0010-module-contract-partage-autorise.md).
+Résumé : clean architecture stricte par module (`domain`/`application`/`infrastructure`/`adapter`), SOLID, `final` systématique (paramètres, variables locales, champs — y compris `this.` obligatoire sur tout accès à un champ/méthode d'instance), records pour les value objects/événements/DTOs, suffixe systématique par rôle (`UseCase`/`Service`/`Repository`/`Document`/`Envelope`/... — voir tableau dans coding-standards.md), JavaDoc obligatoire sur `domain`, pas de commentaires qui répètent le code. Le module `cerbere-shared-kernel` (package `fr.cerbere.shared`) porte les objets et configurations communs (enveloppe Kafka, sérialiseur JSON, mapper/sécurité par défaut) — voir [ADR 0013](docs/adr/0013-module-cerbere-shared-kernel.md).
 
 ## Structure du repo
 
@@ -41,6 +41,7 @@ Résumé : clean architecture stricte par module (`domain`/`application`/`infras
 | `cerbere-history` | Historique des événements/alertes | Scaffold vide |
 | `cerbere-notification` | Envoi d'alertes (email/push) | Scaffold vide |
 | `cerbere-devices-mock` | Simulation de devices (contact, mouvement, sirène) | **Implémenté** |
+| `cerbere-shared-kernel` | Objets/configs communs (`EventEnvelope`, `JacksonEventSerializer`, `CommonJacksonConfig`, `PermitAllSecurityConfig`) | **Implémenté** |
 | `deployment` | `docker-compose.yaml` (Mongo, Kafka, apps) | Mongo + Kafka (config KRaft corrigée) |
 | `docs` | PRD, ADR, bonnes pratiques, architecture | À jour |
 | `.github/workflows` | CI de publication GitHub Packages | `publish-packages.yml` (6 modules) |
@@ -52,18 +53,23 @@ Résumé : clean architecture stricte par module (`domain`/`application`/`infras
 # Infra (Mongo + Kafka)
 cd deployment && docker compose up -d mongodb kafka
 
+# cerbere-shared-kernel doit être installé en local avant tout module qui en dépend
+# (pas de pom agrégateur racine, voir ADR 0009/0013)
+cd cerbere-shared-kernel && ./mvnw install -DskipTests
+
 # cerbere-devices-mock
 cd cerbere-devices-mock && ./mvnw spring-boot:run
 ```
 
-Les autres modules ne sont pas encore implémentés (scaffolds vides).
+Les autres modules (hors `cerbere-shared-kernel`) ne sont pas encore implémentés (scaffolds vides).
 
 ## Journal des itérations
 
 | Date | Itération | Livré | Références |
 |---|---|---|---|
 | 2026-07-22 | Fondations + devices-mock | Structure `docs/` complète (PRD, 9 ADR, best-practices, vue d'architecture), `CLAUDE.md` racine, module `cerbere-devices-mock` complet (clean architecture, simulation contact/mouvement/sirène, producteur Kafka, scheduler + API de contrôle), correction `deployment/docker-compose.yaml` (renommage + config Kafka KRaft) | [PRD 001](docs/prd/001-mvp-backend-alarme.md), ADR 0001-0009 |
-| 2026-07-22 | Règles additionnelles | Module `contract` partagé autorisé (ADR 0010, supersede ADR 0005), suffixe systématique par rôle + `this.` obligatoire (coding-standards.md), renommage `PublishDeviceEventUseCase` → `PublishDeviceEventService`, config GitHub Packages sur les 6 modules + workflow CI (ADR 0011), `README.md` racine, correction du conflit de bean `ObjectMapper`/`JsonMapper` (`@Primary` retiré de `MapperConfig`) qui empêchait le démarrage | ADR 0010, ADR 0011 |
+| 2026-07-22 | Règles additionnelles | Module `contract` partagé autorisé (ADR 0010, supersede ADR 0005), suffixe systématique par rôle + `this.` obligatoire (coding-standards.md), renommage `PublishDeviceEventUseCase` → `PublishDeviceEventService`, config GitHub Packages sur les 6 modules + workflow CI (ADR 0011), `README.md` racine, correction du conflit de bean `ObjectMapper`/`JsonMapper` (`@Primary` retiré de `MapperConfig`), sérialiseur Kafka Jackson 3 écrit à la main (`DeviceEventEnvelopeSerializer`, ADR 0012) suite à l'incompatibilité du `JsonSerializer` Jackson 2 de spring-kafka. **Vérifié bout-en-bout** : device créé, événement déclenché, message confirmé sur `cerbere.device.events.raw` via `kafka-console-consumer` | ADR 0010, ADR 0011, ADR 0012 |
+| 2026-07-22 | Module `cerbere-shared-kernel` | Module partagé créé (`fr.cerbere.shared`) : `EventEnvelope`/`JacksonEventSerializer` (généralisés depuis les équivalents `Device*` de `cerbere-devices-mock`), `CommonJacksonConfig`/`PermitAllSecurityConfig` (configs communes). `cerbere-devices-mock` migré pour en dépendre, fichiers dupliqués supprimés. Workflow CI corrigé : `chmod +x mvnw` (fix `Permission denied`) + job dédié publiant `cerbere-shared-kernel` avant les autres modules (`needs:`) | [ADR 0013](docs/adr/0013-module-cerbere-shared-kernel.md) |
 
 ## Décisions d'architecture actives
 
@@ -78,13 +84,17 @@ Les autres modules ne sont pas encore implémentés (scaffolds vides).
 - [ADR 0009](docs/adr/0009-pom-agregateur-racine-optionnel.md) — Pom agrégateur racine sans héritage (Accepted)
 - [ADR 0010](docs/adr/0010-module-contract-partage-autorise.md) — Module contract partagé autorisé (Accepted, supersede ADR 0005)
 - [ADR 0011](docs/adr/0011-publication-github-packages.md) — Publication GitHub Packages (Accepted)
+- [ADR 0012](docs/adr/0012-serializer-kafka-jackson3-maison.md) — Sérialiseur Kafka Jackson 3 écrit à la main (Accepted)
+- [ADR 0013](docs/adr/0013-module-cerbere-shared-kernel.md) — Module `cerbere-shared-kernel` (Accepted)
 
 ## Dette technique connue / TODO
 
 - Keycloak non branché : tous les services actuellement en sécurité `permitAll` avec `TODO Keycloak` explicite — ne pas exposer sur internet en l'état.
 - `cerbere-core`, `cerbere-history`, `cerbere-notification`, `cerbere-bff`, `api-gateway` restent des scaffolds vides — prochaine itération.
 - `deployment/docker-compose.yaml` ne contient encore que Mongo + Kafka + `cerbere-devices-mock` — les 5 autres services applicatifs et le conteneur SMTP factice (maildev) seront ajoutés avec `cerbere-notification`.
-- Pas de tests d'intégration Kafka avec un vrai broker (embedded/Testcontainers) pour l'instant — tests unitaires sur les use-cases uniquement.
+- Pas de tests d'intégration Kafka avec un vrai broker (embedded/Testcontainers) pour l'instant — tests unitaires sur les use-cases uniquement (la publication réelle a été vérifiée manuellement, pas encore automatisée).
+- `spring-kafka` 3.3.8 n'a pas de sérialiseur JSON natif Jackson 3 : contournement centralisé dans `fr.cerbere.shared.kafka.JacksonEventSerializer` (ADR 0012/0013), réutilisable tel quel par les futurs producteurs.
+- Pas de pom agrégateur racine réel (ADR 0009 le laissait optionnel) : builder `cerbere-shared-kernel` avant tout module qui en dépend reste une étape manuelle (`mvnw install`) tant qu'il n'est pas créé.
 
 ## Règles de mise à jour pour l'IA
 

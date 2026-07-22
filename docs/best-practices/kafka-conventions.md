@@ -50,7 +50,8 @@ Tout message publié sur un topic Cerbère respecte cette structure JSON :
 
 ## Règles d'implémentation
 
-- **Pas de librairie Java partagée** pour cette enveloppe ([ADR 0005](../adr/0005-pas-de-librairie-partagee-evenements.md)) : chaque service définit son propre `record` Jackson, en lecture tolérante (ignore les champs/`eventType` inconnus plutôt que de lever une erreur de désérialisation).
+- Cette enveloppe est portée par le type partagé `fr.cerbere.shared.event.EventEnvelope` (module `cerbere-shared-kernel`), ainsi qu'un sérialiseur Kafka générique `fr.cerbere.shared.kafka.JacksonEventSerializer` — voir [ADR 0013](../adr/0013-module-cerbere-shared-kernel.md), qui remplace l'approche « pas de librairie partagée » de l'[ADR 0005](../adr/0005-pas-de-librairie-partagee-evenements.md)/[ADR 0010](../adr/0010-module-contract-partage-autorise.md). Tout service qui publie/consomme sur Kafka dépend de ce module plutôt que de redéfinir sa propre copie.
+- Désérialisation toujours tolérante côté consommateur (ignore les champs/`eventType` inconnus plutôt que de lever une erreur), quel que soit le type utilisé.
 - Un producteur ne publie jamais un message sans `eventId`, `eventType`, `occurredAt`, `producedAt`, `source`, `correlationId` renseignés.
 - Un consommateur doit ignorer silencieusement (avec un log niveau `debug`) tout `eventType` qu'il ne sait pas traiter — jamais faire échouer le listener sur un type inconnu.
 - Un consumer group par service (nom = `spring.application.name`), jamais de consumer group partagé entre deux services différents.

@@ -2,8 +2,8 @@ package fr.cerbere.component.cerbere_devices_mock.infrastructure.messaging.kafka
 
 import fr.cerbere.component.cerbere_devices_mock.domain.event.DeviceEventOccurred;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.out.DeviceEventPublisher;
-import fr.cerbere.component.cerbere_devices_mock.infrastructure.messaging.event.DeviceEventEnvelope;
 import fr.cerbere.component.cerbere_devices_mock.infrastructure.messaging.event.DeviceEventEnvelopeFactory;
+import fr.cerbere.shared.event.EventEnvelope;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,15 +17,15 @@ public final class DeviceEventKafkaProducer implements DeviceEventPublisher {
 
 	private static final String TOPIC = "cerbere.device.events.raw";
 
-	private final KafkaTemplate<String, DeviceEventEnvelope> kafkaTemplate;
+	private final KafkaTemplate<String, EventEnvelope> kafkaTemplate;
 
-	public DeviceEventKafkaProducer(final KafkaTemplate<String, DeviceEventEnvelope> kafkaTemplate) {
+	public DeviceEventKafkaProducer(final KafkaTemplate<String, EventEnvelope> kafkaTemplate) {
 		this.kafkaTemplate = kafkaTemplate;
 	}
 
 	@Override
 	public void publish(final DeviceEventOccurred event) {
-		final DeviceEventEnvelope envelope = DeviceEventEnvelopeFactory.from(event);
+		final EventEnvelope envelope = DeviceEventEnvelopeFactory.from(event);
 		final String partitionKey = event.deviceId().toString();
 		this.kafkaTemplate.send(TOPIC, partitionKey, envelope);
 	}

@@ -1,12 +1,12 @@
 package fr.cerbere.component.cerbere_devices_mock.adapter.in.web;
 
-import fr.cerbere.component.cerbere_devices_mock.adapter.config.MapperConfig;
-import fr.cerbere.component.cerbere_devices_mock.adapter.config.SecurityConfig;
 import fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto.RegisterSimulatedDeviceRequest;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.ListSimulatedDevicesUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RegisterSimulatedDeviceUseCase;
+import fr.cerbere.shared.config.CommonJacksonConfig;
+import fr.cerbere.shared.config.PermitAllSecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * use-cases mockés (aucune dépendance Mongo/Kafka).
  */
 @WebMvcTest(SimulatedDeviceController.class)
-@Import({SecurityConfig.class, MapperConfig.class})
+@Import({PermitAllSecurityConfig.class, CommonJacksonConfig.class})
 class SimulatedDeviceControllerTest {
 
 	@Autowired

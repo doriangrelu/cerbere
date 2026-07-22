@@ -4,14 +4,16 @@ import fr.cerbere.component.cerbere_devices_mock.domain.event.DeviceEventOccurre
 import fr.cerbere.component.cerbere_devices_mock.domain.model.ContactState;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.MotionState;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SirenState;
+import fr.cerbere.shared.event.EventEnvelope;
 
 import java.time.Instant;
 import java.util.Map;
 
 /**
- * Traduit un {@link DeviceEventOccurred} (événement de domaine) vers l'enveloppe
- * Kafka standard. Le mapping {@code eventType}/{@code payload} par type de device
- * est documenté dans docs/best-practices/kafka-conventions.md.
+ * Traduit un {@link DeviceEventOccurred} (événement de domaine) vers l'{@link EventEnvelope}
+ * commune (module {@code cerbere-shared-kernel}, voir ADR 0013). Le mapping
+ * {@code eventType}/{@code payload} par type de device est documenté dans
+ * docs/best-practices/kafka-conventions.md.
  */
 public final class DeviceEventEnvelopeFactory {
 
@@ -20,8 +22,8 @@ public final class DeviceEventEnvelopeFactory {
 	private DeviceEventEnvelopeFactory() {
 	}
 
-	public static DeviceEventEnvelope from(final DeviceEventOccurred event) {
-		return new DeviceEventEnvelope(
+	public static EventEnvelope from(final DeviceEventOccurred event) {
+		return new EventEnvelope(
 			event.eventId(),
 			eventTypeOf(event),
 			event.occurredAt(),
