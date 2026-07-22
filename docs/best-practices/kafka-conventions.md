@@ -48,6 +48,15 @@ Tout message publié sur un topic Cerbère respecte cette structure JSON :
 - `device.motion.detected` — payload : `{ "detected": true | false }`
 - `device.siren.triggered` — payload : `{ "active": true | false }`
 
+## Provisionnement des topics
+
+Chaque topic est déclaré explicitement via un bean `NewTopic` (Spring Kafka `TopicBuilder`) dans le service producteur, plutôt que de dépendre de l'auto-création Kafka (qui appliquerait les valeurs par défaut du broker). Convention de dimensionnement pour Cerbère (système mono-maison, faible volume d'événements) :
+
+- **Partitions : 3.** Suffisant pour paralléliser le traitement par device (clé de partition = `deviceId`, donc tous les événements d'un même device restent ordonnés sur la même partition) sans sur-provisionner un topic à faible débit.
+- **Réplicas : 1** en développement (cluster Kafka mono-broker KRaft). À revoir si un cluster multi-broker est introduit.
+- **Rétention : 3 jours.** Kafka n'est qu'un transport, `cerbere-history` est la source de vérité durable ([ADR 0006](../adr/0006-notification-copie-locale-des-destinataires.md) documente un principe similaire pour les destinataires) ; une rétention courte suffit et limite l'usage disque.
+- Les consumer groups (un par service, voir plus bas) et le fan-out qu'ils garantissent ne sont pas affectés par le nombre de partitions : chaque service reçoit toujours l'intégralité des messages du topic, répartis entre ses propres instances s'il en a plusieurs.
+
 ## Règles d'implémentation
 
 - Cette enveloppe est portée par le type partagé `fr.cerbere.shared.event.EventEnvelope` (module `cerbere-shared-kernel`), ainsi qu'un sérialiseur Kafka générique `fr.cerbere.shared.kafka.JacksonEventSerializer` — voir [ADR 0013](../adr/0013-module-cerbere-shared-kernel.md), qui remplace l'approche « pas de librairie partagée » de l'[ADR 0005](../adr/0005-pas-de-librairie-partagee-evenements.md)/[ADR 0010](../adr/0010-module-contract-partage-autorise.md). Tout service qui publie/consomme sur Kafka dépend de ce module plutôt que de redéfinir sa propre copie.

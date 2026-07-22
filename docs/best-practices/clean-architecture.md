@@ -8,8 +8,8 @@ domain/
   event/        événements de domaine (framework-agnostic), distincts des DTO Kafka
   exception/    exceptions métier
   port/
-    in/         interfaces des use-cases exposés ("driving ports"), ex: ArmSystemUseCase
-    out/        interfaces requises par le domaine ("driven ports"), ex: AlarmSystemRepository, DeviceEventPublisher
+    in/<agrégat>/   interfaces des use-cases exposés ("driving ports"), ex: port/in/alarm/ArmSystemUseCase
+    out/<agrégat>/  interfaces requises par le domaine ("driven ports"), ex: port/out/device/DeviceRepository
 application/
   usecase/      implémentations des ports "in", orchestration pure, dépend uniquement de domain
 infrastructure/
@@ -30,6 +30,21 @@ adapter, infrastructure  --->  application  --->  domain  --->  (rien)
 ```
 
 Aucune classe de `domain` n'importe `org.springframework.*`, `com.mongodb.*` ou `org.apache.kafka.*`. Si une telle dépendance semble nécessaire dans `domain`, c'est le signe qu'un port manque.
+
+## Sous-packages des ports
+
+Dès qu'un module a plus de 3-4 interfaces de port dans `port/in` ou `port/out`, les regrouper en sous-packages par agrégat/concept métier (ex : `device`, `zone`, `alarm`), plutôt que de tout laisser dans un seul package fourre-tout. Objectif : pouvoir naviguer directement vers "tout ce qui concerne les devices" sans avoir à lire les noms de fichiers un par un. Exemple (`cerbere-core`) :
+
+```
+port/in/device/  RegisterDeviceUseCase, UpdateDeviceUseCase, DeleteDeviceUseCase, ListDevicesUseCase
+port/in/zone/    RegisterZoneUseCase, UpdateZoneUseCase, DeleteZoneUseCase, ListZonesUseCase
+port/in/alarm/   ArmSystemUseCase, DisarmSystemUseCase, GetAlarmStatusUseCase, HandleDeviceEventUseCase
+port/out/device/ DeviceRepository
+port/out/zone/   ZoneRepository
+port/out/alarm/  AlarmSystemRepository, AlarmStateChangedPublisher, AlertPublisher
+```
+
+Un module simple avec seulement 2-3 use-cases au total (ex : `cerbere-devices-mock`) peut rester en `port/in`/`port/out` plats — ne pas sur-découper prématurément.
 
 ## Cas particuliers
 
