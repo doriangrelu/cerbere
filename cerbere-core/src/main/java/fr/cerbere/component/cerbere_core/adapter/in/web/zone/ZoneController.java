@@ -1,15 +1,15 @@
 package fr.cerbere.component.cerbere_core.adapter.in.web.zone;
 
 import fr.cerbere.component.cerbere_core.adapter.in.web.mapper.CommonTextMapper;
-import fr.cerbere.component.cerbere_core.adapter.in.web.zone.dto.RegisterZoneRequest;
-import fr.cerbere.component.cerbere_core.adapter.in.web.zone.dto.UpdateZoneRequest;
-import fr.cerbere.component.cerbere_core.adapter.in.web.zone.dto.ZoneResponse;
 import fr.cerbere.component.cerbere_core.adapter.in.web.zone.dto.ZoneWebMapper;
 import fr.cerbere.component.cerbere_core.domain.model.Zone;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.DeleteZoneUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.ListZonesUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.RegisterZoneUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.UpdateZoneUseCase;
+import fr.cerbere.shared.dto.zone.RegisterZoneRequest;
+import fr.cerbere.shared.dto.zone.UpdateZoneRequest;
+import fr.cerbere.shared.dto.zone.ZoneResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -1,9 +1,6 @@
 package fr.cerbere.component.cerbere_core.adapter.in.web.device;
 
-import fr.cerbere.component.cerbere_core.adapter.in.web.device.dto.DeviceResponse;
 import fr.cerbere.component.cerbere_core.adapter.in.web.device.dto.DeviceWebMapper;
-import fr.cerbere.component.cerbere_core.adapter.in.web.device.dto.RegisterDeviceRequest;
-import fr.cerbere.component.cerbere_core.adapter.in.web.device.dto.UpdateDeviceRequest;
 import fr.cerbere.component.cerbere_core.adapter.in.web.mapper.CommonTextMapper;
 import fr.cerbere.component.cerbere_core.domain.model.Device;
 import fr.cerbere.component.cerbere_core.domain.model.DeviceType;
@@ -11,6 +8,9 @@ import fr.cerbere.component.cerbere_core.domain.port.in.device.DeleteDeviceUseCa
 import fr.cerbere.component.cerbere_core.domain.port.in.device.ListDevicesUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.RegisterDeviceUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.UpdateDeviceUseCase;
+import fr.cerbere.shared.dto.device.DeviceResponse;
+import fr.cerbere.shared.dto.device.RegisterDeviceRequest;
+import fr.cerbere.shared.dto.device.UpdateDeviceRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

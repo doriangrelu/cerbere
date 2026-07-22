@@ -1,9 +1,11 @@
-package fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto;
+package fr.cerbere.shared.dto.devicemock;
 
 import java.time.Instant;
 
 /**
- * Représentation REST d'un événement de device publié.
+ * Représentation REST d'un événement de device publié. Contrat partagé entre
+ * {@code cerbere-devices-mock} (producteur) et {@code cerbere-bff}
+ * (consommateur, section "mode test").
  */
 public record DeviceEventResponse(
 	String eventId,

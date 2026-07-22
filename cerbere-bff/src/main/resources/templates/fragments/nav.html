@@ -9,6 +9,18 @@
 				<i>shield</i>
 				<span>Alarme</span>
 			</a>
+			<a href="/devices" class="button">
+				<i>sensors</i>
+				<span>Devices</span>
+			</a>
+			<a href="/zones" class="button">
+				<i>door_front</i>
+				<span>Zones</span>
+			</a>
+			<a href="/test-mode" class="button" th:if="${testModeEnabled}">
+				<i>science</i>
+				<span>Mode test</span>
+			</a>
 		</nav>
 	</header>
 </nav>

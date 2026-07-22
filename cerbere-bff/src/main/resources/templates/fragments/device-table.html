@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<table th:fragment="deviceTable" id="device-table" class="border">
+	<thead>
+	<tr>
+		<th>Id</th>
+		<th>Type</th>
+		<th>Libellé</th>
+		<th>Zone</th>
+		<th>Statut</th>
+		<th></th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr th:each="device : ${devices}" th:with="zoneIdValue=${device.zoneId() != null ? device.zoneId() : ''}">
+		<td th:text="${device.id()}"></td>
+		<td th:text="${device.type()}"></td>
+		<td th:text="${device.label()}"></td>
+		<td th:text="${device.zoneId() != null} ? ${device.zoneId()} : '—'"></td>
+		<td th:text="${device.enabled()} ? 'Actif' : 'Inactif'"></td>
+		<td>
+			<button class="small circle transparent"
+					th:hx-put="@{/devices/{id}/toggle(id=${device.id()})}"
+					th:hx-vals="|{&quot;label&quot;: &quot;${device.label()}&quot;, &quot;zoneId&quot;: &quot;${zoneIdValue}&quot;, &quot;enabled&quot;: ${device.enabled()}}|"
+					hx-target="#device-table" hx-swap="outerHTML">
+				<i th:text="${device.enabled()} ? 'toggle_off' : 'toggle_on'"></i>
+			</button>
+			<button class="small circle transparent"
+					th:hx-delete="@{/devices/{id}(id=${device.id()})}"
+					hx-target="#device-table" hx-swap="outerHTML"
+					hx-confirm="Supprimer ce device ?">
+				<i>delete</i>
+			</button>
+		</td>
+	</tr>
+	<tr th:if="${#lists.isEmpty(devices)}">
+		<td colspan="6">Aucun device enregistré.</td>
+	</tr>
+	</tbody>
+</table>
+</body>
+</html>

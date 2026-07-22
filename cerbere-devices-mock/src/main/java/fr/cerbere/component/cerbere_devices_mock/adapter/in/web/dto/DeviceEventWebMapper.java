@@ -1,6 +1,7 @@
 package fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto;
 
 import fr.cerbere.component.cerbere_devices_mock.domain.event.DeviceEventOccurred;
+import fr.cerbere.shared.dto.devicemock.DeviceEventResponse;
 
 /**
  * Traduction entre l'événement de domaine {@link DeviceEventOccurred} et le DTO REST.

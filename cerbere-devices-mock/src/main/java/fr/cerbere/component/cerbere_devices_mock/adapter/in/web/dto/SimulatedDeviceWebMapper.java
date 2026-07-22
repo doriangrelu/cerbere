@@ -1,6 +1,7 @@
 package fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto;
 
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
+import fr.cerbere.shared.dto.devicemock.SimulatedDeviceResponse;
 
 /**
  * Traduction entre le modèle de domaine {@link SimulatedDevice} et les DTO REST.

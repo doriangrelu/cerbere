@@ -1,12 +1,12 @@
 package fr.cerbere.component.cerbere_devices_mock.adapter.in.web;
 
-import fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto.RegisterSimulatedDeviceRequest;
-import fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto.SimulatedDeviceResponse;
 import fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto.SimulatedDeviceWebMapper;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.ListSimulatedDevicesUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RegisterSimulatedDeviceUseCase;
+import fr.cerbere.shared.dto.devicemock.RegisterSimulatedDeviceRequest;
+import fr.cerbere.shared.dto.devicemock.SimulatedDeviceResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;

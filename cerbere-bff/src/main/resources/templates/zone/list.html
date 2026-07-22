@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head>
+	<title>Cerbère — Zones</title>
+</head>
+<body>
+<main>
+	<h4>Zones</h4>
+
+	<div th:replace="~{fragments/zone-table :: zoneTable}"></div>
+
+	<div class="space"></div>
+
+	<article>
+		<h6>Créer une zone</h6>
+		<form hx-post="/zones" hx-target="#zone-table" hx-swap="outerHTML">
+			<div class="field label border">
+				<input type="text" name="name" required>
+				<label>Nom</label>
+			</div>
+			<button type="submit">
+				<i>add</i>
+				<span>Créer</span>
+			</button>
+		</form>
+	</article>
+</main>
+</body>
+</html>

@@ -73,6 +73,11 @@ Deux cas, pattern différent :
 - Les boutons d'action (arm/disarm) déclenchent un `hx-post` qui retourne **uniquement le fragment concerné** (ex : le badge de statut), jamais la page entière.
 - CSRF actuellement désactivé partout (`PermitAllSecurityConfig`, TODO Keycloak) donc pas de problème pour l'instant. Le jour où CSRF sera activé : soit une version compatible Boot 4 de `htmx-spring-boot` sera sortie (à réévaluer), soit injecter le token à la main via un listener `htmx:configRequest` en JS.
 - Un `id` HTML stable sur l'élément remplacé (`hx-target`) à chaque interaction, pour que le swap soit prévisible.
+- Attributs `hx-*` dynamiques dans une boucle (`th:each`) : utiliser `th:hx-put`/`th:hx-vals`/... (Thymeleaf traite tout attribut `th:xxx` non réservé comme un setter générique de l'attribut `xxx`). Pour l'URL, préférer la substitution de chemin `@{/devices/{id}(id=${device.id()})}` à la concaténation de chaînes. Pour `hx-vals`, htmx attend du **JSON valide (guillemets doubles)** — un littéral Thymeleaf `|{'label':'...'}|` (guillemets simples) est syntaxiquement invalide en JSON et **échoue silencieusement** (aucune erreur visible, les paramètres n'arrivent simplement jamais côté serveur). Utiliser les entités HTML pour produire les guillemets doubles :
+  ```html
+  th:hx-vals="|{&quot;label&quot;: &quot;${device.label()}&quot;, &quot;enabled&quot;: ${device.enabled()}}|"
+  ```
+  Piège rencontré et corrigé lors de l'écran Devices (bouton d'activation/désactivation).
 
 ## CSS / Beer CSS
 

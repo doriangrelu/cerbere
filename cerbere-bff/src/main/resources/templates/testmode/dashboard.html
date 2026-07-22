@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head>
+	<title>Cerbère — Mode test</title>
+</head>
+<body>
+<main>
+	<h4>Mode test — pilotage du mock</h4>
+	<p>Cette section pilote <code>cerbere-devices-mock</code> : elle n'est visible que parce que
+		<code>cerbere.bff.test-mode.enabled=true</code> sur ce déploiement.</p>
+
+	<div th:replace="~{fragments/simulated-device-table :: simulatedDeviceTable}"></div>
+
+	<div class="space"></div>
+
+	<article>
+		<h6>Créer un device simulé</h6>
+		<form hx-post="/test-mode/devices" hx-target="#simulated-device-table" hx-swap="outerHTML">
+			<div class="field label border suffix">
+				<select name="type" required>
+					<option value="CONTACT">CONTACT</option>
+					<option value="MOTION">MOTION</option>
+					<option value="SIREN">SIREN</option>
+				</select>
+				<label>Type</label>
+				<i>arrow_drop_down</i>
+			</div>
+			<div class="field label border">
+				<input type="text" name="label" required>
+				<label>Libellé</label>
+			</div>
+			<div class="field label border suffix">
+				<select name="zoneId">
+					<option value="">— Aucune zone —</option>
+					<option th:each="zone : ${zones}" th:value="${zone.id()}" th:text="${zone.name()}"></option>
+				</select>
+				<label>Zone</label>
+				<i>arrow_drop_down</i>
+			</div>
+			<label class="checkbox">
+				<input type="checkbox" name="autoSimulate">
+				<span>Simulation automatique (scheduler)</span>
+			</label>
+			<button type="submit">
+				<i>add</i>
+				<span>Créer</span>
+			</button>
+		</form>
+	</article>
+</main>
+</body>
+</html>

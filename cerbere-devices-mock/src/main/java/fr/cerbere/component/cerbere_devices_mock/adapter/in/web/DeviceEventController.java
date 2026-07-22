@@ -1,10 +1,10 @@
 package fr.cerbere.component.cerbere_devices_mock.adapter.in.web;
 
-import fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto.DeviceEventResponse;
 import fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto.DeviceEventWebMapper;
-import fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto.TriggerDeviceEventRequest;
 import fr.cerbere.component.cerbere_devices_mock.domain.event.DeviceEventOccurred;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.TriggerDeviceEventUseCase;
+import fr.cerbere.shared.dto.devicemock.DeviceEventResponse;
+import fr.cerbere.shared.dto.devicemock.TriggerDeviceEventRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;

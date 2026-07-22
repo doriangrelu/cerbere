@@ -17,4 +17,9 @@ public final class RestClientConfig {
 	public RestClient coreRestClient(@Value("${cerbere.core.base-url}") final String baseUrl) {
 		return RestClient.builder().baseUrl(baseUrl).build();
 	}
+
+	@Bean
+	public RestClient devicesMockRestClient(@Value("${cerbere.devices-mock.base-url}") final String baseUrl) {
+		return RestClient.builder().baseUrl(baseUrl).build();
+	}
 }
