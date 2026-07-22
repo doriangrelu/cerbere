@@ -6,7 +6,6 @@
 	<table class="border">
 		<thead>
 		<tr>
-			<th>Id</th>
 			<th>Nom</th>
 			<th>Devices</th>
 			<th></th>
@@ -14,7 +13,6 @@
 		</thead>
 		<tbody>
 		<tr th:each="zone : ${zones}">
-			<td th:text="${zone.id()}"></td>
 			<td>
 				<form class="row" th:hx-put="@{/zones/{id}(id=${zone.id()})}"
 					  hx-target="#zone-table" hx-swap="outerHTML">
@@ -35,7 +33,7 @@
 			</td>
 		</tr>
 		<tr th:if="${#lists.isEmpty(zones)}">
-			<td colspan="4">Aucune zone enregistrée.</td>
+			<td colspan="3">Aucune zone enregistrée.</td>
 		</tr>
 		</tbody>
 	</table>

@@ -1,51 +1,52 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<table th:fragment="simulatedDeviceTable" id="simulated-device-table" class="border">
-	<thead>
-	<tr>
-		<th>Id</th>
-		<th>Type</th>
-		<th>Libellé</th>
-		<th>Zone</th>
-		<th>Auto</th>
-		<th>État courant</th>
-		<th>Déclencher</th>
-	</tr>
-	</thead>
-	<tbody>
-	<tr th:each="device : ${simulatedDevices}">
-		<td th:text="${device.id()}"></td>
-		<td th:text="${device.type()}"></td>
-		<td th:text="${device.label()}"></td>
-		<td th:text="${device.zoneId() != null} ? ${device.zoneId()} : '—'"></td>
-		<td th:text="${device.autoSimulate()} ? 'Oui' : 'Non'"></td>
-		<td th:text="${device.currentState()}"></td>
-		<td>
-			<form class="row" th:hx-post="@{/test-mode/devices/{id}/events(id=${device.id()})}"
-				  hx-target="#simulated-device-table" hx-swap="outerHTML">
-				<select name="state" th:if="${device.type() == 'CONTACT'}">
-					<option value="OPEN">OPEN</option>
-					<option value="CLOSED">CLOSED</option>
-				</select>
-				<select name="state" th:if="${device.type() == 'MOTION'}">
-					<option value="DETECTED">DETECTED</option>
-					<option value="CLEAR">CLEAR</option>
-				</select>
-				<select name="state" th:if="${device.type() == 'SIREN'}">
-					<option value="ACTIVE">ACTIVE</option>
-					<option value="INACTIVE">INACTIVE</option>
-				</select>
-				<button class="small circle transparent" type="submit">
-					<i>bolt</i>
-				</button>
-			</form>
-		</td>
-	</tr>
-	<tr th:if="${#lists.isEmpty(simulatedDevices)}">
-		<td colspan="7">Aucun device simulé.</td>
-	</tr>
-	</tbody>
-</table>
+<div th:fragment="simulatedDeviceTable" id="simulated-device-table">
+	<article class="error" th:if="${simulatedDeviceError}" th:text="${simulatedDeviceError}"></article>
+	<table class="border">
+		<thead>
+		<tr>
+			<th>Type</th>
+			<th>Libellé</th>
+			<th>Zone</th>
+			<th>Auto</th>
+			<th>État courant</th>
+			<th>Déclencher</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:each="device : ${simulatedDevices}">
+			<td th:text="${device.type()}"></td>
+			<td th:text="${device.label()}"></td>
+			<td th:text="${device.zoneName() != null} ? ${device.zoneName()} : '—'"></td>
+			<td th:text="${device.autoSimulate()} ? 'Oui' : 'Non'"></td>
+			<td th:text="${device.currentState()}"></td>
+			<td>
+				<form class="row" th:hx-post="@{/test-mode/devices/{id}/events(id=${device.id()})}"
+					  hx-target="#simulated-device-table" hx-swap="outerHTML">
+					<select name="state" th:if="${device.type() == 'CONTACT'}">
+						<option value="OPEN">OPEN</option>
+						<option value="CLOSED">CLOSED</option>
+					</select>
+					<select name="state" th:if="${device.type() == 'MOTION'}">
+						<option value="DETECTED">DETECTED</option>
+						<option value="CLEAR">CLEAR</option>
+					</select>
+					<select name="state" th:if="${device.type() == 'SIREN'}">
+						<option value="ACTIVE">ACTIVE</option>
+						<option value="INACTIVE">INACTIVE</option>
+					</select>
+					<button class="small circle transparent" type="submit">
+						<i>bolt</i>
+					</button>
+				</form>
+			</td>
+		</tr>
+		<tr th:if="${#lists.isEmpty(simulatedDevices)}">
+			<td colspan="6">Aucun device simulé.</td>
+		</tr>
+		</tbody>
+	</table>
+</div>
 </body>
 </html>

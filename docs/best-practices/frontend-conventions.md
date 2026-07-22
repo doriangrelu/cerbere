@@ -21,6 +21,8 @@ Un dossier par écran/agrégat (`alarm/`, plus tard `devices/`, `zones/`), un do
 
 Pas de `thymeleaf-layout-dialect` (voir ADR 0015). Pattern natif :
 
+**Piège rencontré** : le fragment racine d'un composant de layout doit être exactement l'élément HTML voulu, sans wrapper superflu autour. `fragments/nav.html` avait initialement `<nav th:fragment="nav" class="left-align"><header class="fixed primary">...</header></nav>` — l'élément `<nav>` externe (sans positionnement fixe) suivait le flux normal du document à côté de `<main>`, au lieu du `<header class="fixed">` interne qui, lui, se positionne correctement. Corrigé en faisant du `<header class="fixed primary">` directement la racine du fragment.
+
 ```html
 <!-- layout/main.html -->
 <div th:fragment="layout(title, content)">
@@ -78,6 +80,15 @@ Deux cas, pattern différent :
   th:hx-vals="|{&quot;label&quot;: &quot;${device.label()}&quot;, &quot;enabled&quot;: ${device.enabled()}}|"
   ```
   Piège rencontré et corrigé lors de l'écran Devices (bouton d'activation/désactivation).
+
+## Ne jamais exposer d'UUID brut à l'usager
+
+Le BFF agrège les services métier pour que l'usager n'ait jamais à saisir ni à lire un identifiant technique :
+
+- **Corrélation par nom, pas par UUID** : toute sélection d'une entité liée (zone, device) se fait via une liste déroulante peuplée par le contrôleur BFF (ex : `<option th:value="${zone.id()}" th:text="${zone.name()}">`), jamais via un champ texte libre où l'usager collerait un UUID.
+- **Résolution des clés étrangères côté contrôleur, pas dans le template** : quand une réponse REST expose un `zoneId`/`deviceId` brut (ex : `DeviceResponse.zoneId()`), le contrôleur BFF le résout en nom lisible *avant* de le passer à la vue, via un petit modèle de présentation propre au BFF (`record XxxRow(..., String zoneName, ...)`, package `adapter.in.web.<agrégat>`, jamais dans `cerbere-shared-kernel` — ce n'est pas un contrat REST, juste une vue). Le template ne fait aucune logique de jointure.
+- **Revalidation des identifiants soumis** : un id sélectionné dans un formulaire (ex : `candidateId`, `zoneId`) doit être revérifié côté contrôleur BFF contre la liste courante des entités existantes *avant* d'être transmis au service métier — un UUID ne correspondant à rien (périmé, trafiqué via devtools) doit être rejeté avec un message d'erreur affiché dans le fragment (même pattern que le 409 zone-non-vide), pas transmis tel quel.
+- L'id brut peut rester présent dans des attributs HTML non visibles (`th:hx-put`, `th:hx-vals`) puisqu'il faut bien cibler la bonne ressource au clic — la règle porte sur ce que l'usager doit **lire et saisir**, pas sur l'attribut technique.
 
 ## CSS / Beer CSS
 

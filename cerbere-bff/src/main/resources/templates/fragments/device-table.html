@@ -1,43 +1,78 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<table th:fragment="deviceTable" id="device-table" class="border">
-	<thead>
-	<tr>
-		<th>Id</th>
-		<th>Type</th>
-		<th>Libellé</th>
-		<th>Zone</th>
-		<th>Statut</th>
-		<th></th>
-	</tr>
-	</thead>
-	<tbody>
-	<tr th:each="device : ${devices}" th:with="zoneIdValue=${device.zoneId() != null ? device.zoneId() : ''}">
-		<td th:text="${device.id()}"></td>
-		<td th:text="${device.type()}"></td>
-		<td th:text="${device.label()}"></td>
-		<td th:text="${device.zoneId() != null} ? ${device.zoneId()} : '—'"></td>
-		<td th:text="${device.enabled()} ? 'Actif' : 'Inactif'"></td>
-		<td>
-			<button class="small circle transparent"
-					th:hx-put="@{/devices/{id}/toggle(id=${device.id()})}"
-					th:hx-vals="|{&quot;label&quot;: &quot;${device.label()}&quot;, &quot;zoneId&quot;: &quot;${zoneIdValue}&quot;, &quot;enabled&quot;: ${device.enabled()}}|"
-					hx-target="#device-table" hx-swap="outerHTML">
-				<i th:text="${device.enabled()} ? 'toggle_off' : 'toggle_on'"></i>
+<div th:fragment="deviceSection" id="device-section">
+	<article class="error" th:if="${deviceError}" th:text="${deviceError}"></article>
+	<table class="border">
+		<thead>
+		<tr>
+			<th>Libellé</th>
+			<th>Type</th>
+			<th>Zone</th>
+			<th>Statut</th>
+			<th></th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:each="device : ${devices}" th:with="zoneIdValue=${device.zoneId() != null ? device.zoneId() : ''}">
+			<td th:text="${device.label()}"></td>
+			<td th:text="${device.type()}"></td>
+			<td th:text="${device.zoneName() != null} ? ${device.zoneName()} : '—'"></td>
+			<td th:text="${device.enabled()} ? 'Actif' : 'Inactif'"></td>
+			<td>
+				<button class="small circle transparent"
+						th:hx-put="@{/devices/{id}/toggle(id=${device.id()})}"
+						th:hx-vals="|{&quot;label&quot;: &quot;${device.label()}&quot;, &quot;zoneId&quot;: &quot;${zoneIdValue}&quot;, &quot;enabled&quot;: ${device.enabled()}}|"
+						hx-target="#device-section" hx-swap="outerHTML">
+					<i th:text="${device.enabled()} ? 'toggle_off' : 'toggle_on'"></i>
+				</button>
+				<button class="small circle transparent"
+						th:hx-delete="@{/devices/{id}(id=${device.id()})}"
+						hx-target="#device-section" hx-swap="outerHTML"
+						hx-confirm="Supprimer ce device ?">
+					<i>delete</i>
+				</button>
+			</td>
+		</tr>
+		<tr th:if="${#lists.isEmpty(devices)}">
+			<td colspan="5">Aucun device enregistré.</td>
+		</tr>
+		</tbody>
+	</table>
+
+	<div class="space"></div>
+
+	<article>
+		<h6>Enregistrer un device</h6>
+		<p th:if="${#lists.isEmpty(availableDevices)}">Aucun device disponible. Créez-en un depuis le Mode test.</p>
+		<form th:unless="${#lists.isEmpty(availableDevices)}" hx-post="/devices" hx-target="#device-section" hx-swap="outerHTML">
+			<div class="field label border suffix">
+				<select name="candidateId" required>
+					<option value="">— Sélectionner un device —</option>
+					<option th:each="candidate : ${availableDevices}" th:value="${candidate.id()}"
+							th:text="${candidate.label() + ' (' + candidate.type() + ')'}"></option>
+				</select>
+				<label>Device</label>
+				<i>arrow_drop_down</i>
+			</div>
+			<div class="field label border">
+				<input type="text" name="label">
+				<label>Libellé (optionnel, sinon celui du device)</label>
+			</div>
+			<div class="field label border suffix">
+				<select name="zoneId">
+					<option value="">— Aucune zone —</option>
+					<option th:each="zone : ${zones}" th:value="${zone.id()}" th:text="${zone.name()}"></option>
+				</select>
+				<label>Zone</label>
+				<i>arrow_drop_down</i>
+			</div>
+			<button type="submit">
+				<i>add</i>
+				<span>Ajouter</span>
 			</button>
-			<button class="small circle transparent"
-					th:hx-delete="@{/devices/{id}(id=${device.id()})}"
-					hx-target="#device-table" hx-swap="outerHTML"
-					hx-confirm="Supprimer ce device ?">
-				<i>delete</i>
-			</button>
-		</td>
-	</tr>
-	<tr th:if="${#lists.isEmpty(devices)}">
-		<td colspan="6">Aucun device enregistré.</td>
-	</tr>
-	</tbody>
-</table>
+		</form>
+	</article>
+</div>
 </body>
 </html>

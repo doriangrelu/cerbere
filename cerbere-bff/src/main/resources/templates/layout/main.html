@@ -15,7 +15,7 @@
 		<script th:src="@{https://unpkg.com/htmx.org@2}"></script>
 	</head>
 	<body class="light">
-	<nav th:replace="~{fragments/nav :: nav}"></nav>
+	<header th:replace="~{fragments/nav :: nav}"></header>
 	<main class="responsive" style="padding: 1rem 1.5rem;" th:replace="${content}"></main>
 	</body>
 	</html>
