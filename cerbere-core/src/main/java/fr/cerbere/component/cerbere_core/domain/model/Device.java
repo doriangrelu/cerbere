@@ -28,10 +28,14 @@ public final class Device {
 	}
 
 	/**
-	 * Enregistre un nouveau device, activé par défaut.
+	 * Enregistre un nouveau device, activé par défaut. {@code id} est fourni par
+	 * l'appelant (pas généré) : c'est l'identifiant du device réel/simulé côté
+	 * bridge, qui doit correspondre au {@code deviceId} transporté dans les
+	 * événements Kafka pour que l'évaluation des alertes puisse le retrouver
+	 * (voir ADR 0004).
 	 */
-	public static Device register(final DeviceType type, final String label, final UUID zoneId) {
-		return new Device(UUID.randomUUID(), type, label, zoneId, true);
+	public static Device register(final UUID id, final DeviceType type, final String label, final UUID zoneId) {
+		return new Device(id, type, label, zoneId, true);
 	}
 
 	/**

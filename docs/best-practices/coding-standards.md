@@ -71,8 +71,8 @@ Tout champ alimenté par une saisie utilisateur libre (`label` d'un device, `nam
 
 ## Contrats partagés
 
-- Un module Maven `contract` partagé (ex : `cerbere-contract`) **est autorisé** pour porter les enveloppes d'événements et DTOs communs à plusieurs services — voir [ADR 0010](../adr/0010-module-contract-partage-autorise.md). Il ne contient que des `record`/enums (aucune logique métier, aucune dépendance Spring/Mongo/Kafka au-delà de Jackson).
-- Règle d'extraction : ne pas créer ce module par anticipation. Chaque service porte son propre DTO tant qu'il est seul consommateur ; l'extraction vers le module partagé n'intervient que lorsqu'un second service a réellement besoin du même contrat.
+- Le module `cerbere-shared-kernel` (`fr.cerbere.shared`) **porte tout DTO consommé par plus d'un module** — voir [ADR 0010](../adr/0010-module-contract-partage-autorise.md)/[ADR 0013](../adr/0013-module-cerbere-shared-kernel.md). Règle sans exception : ça vaut pour les enveloppes/événements Kafka comme pour les DTOs REST (request/response) échangés entre deux services Cerbère (ex : `cerbere-bff` qui appelle `cerbere-core`). **Ne jamais dupliquer une copie locale d'un DTO déjà consommé ailleurs** — sous-package `fr.cerbere.shared.dto.<agrégat>` pour les DTOs REST (ex : `fr.cerbere.shared.dto.alarm.AlarmStatusResponse`), à distinguer de `fr.cerbere.shared.event` (enveloppes Kafka).
+- Règle d'extraction : ne pas créer un DTO partagé par anticipation. Chaque service porte son propre DTO tant qu'il est seul à le produire/consommer ; l'extraction vers `cerbere-shared-kernel` intervient dès qu'un **second** module a réellement besoin du même contrat (producteur+consommateur, ou deux consommateurs).
 
 ## Documentation du code
 

@@ -1,13 +1,13 @@
 package fr.cerbere.component.cerbere_core.adapter.in.web.alarm;
 
-import fr.cerbere.component.cerbere_core.adapter.in.web.alarm.dto.AlarmStatusResponse;
 import fr.cerbere.component.cerbere_core.adapter.in.web.alarm.dto.AlarmWebMapper;
-import fr.cerbere.component.cerbere_core.adapter.in.web.alarm.dto.ArmRequest;
 import fr.cerbere.component.cerbere_core.domain.model.AlarmSystem;
 import fr.cerbere.component.cerbere_core.domain.model.ArmingMode;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.ArmSystemUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.DisarmSystemUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.GetAlarmStatusUseCase;
+import fr.cerbere.shared.dto.alarm.AlarmStatusResponse;
+import fr.cerbere.shared.dto.alarm.ArmRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

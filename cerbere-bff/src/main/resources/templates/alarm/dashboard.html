@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head>
+	<title>Cerbère — Alarme</title>
+</head>
+<body>
+<main>
+	<h4>Tableau de bord alarme</h4>
+
+	<div th:replace="~{fragments/alarm-status :: alarmStatus}"></div>
+
+	<div class="space"></div>
+
+	<div class="row">
+		<button hx-post="/alarm/arm" hx-vals='{"mode":"AWAY"}' hx-target="#alarm-status" hx-swap="outerHTML">
+			<i>logout</i>
+			<span>Armer (absence)</span>
+		</button>
+		<button hx-post="/alarm/arm" hx-vals='{"mode":"HOME"}' hx-target="#alarm-status" hx-swap="outerHTML">
+			<i>home</i>
+			<span>Armer (présence)</span>
+		</button>
+		<button class="border" hx-post="/alarm/disarm" hx-target="#alarm-status" hx-swap="outerHTML">
+			<i>lock_open</i>
+			<span>Désarmer</span>
+		</button>
+	</div>
+</main>
+</body>
+</html>

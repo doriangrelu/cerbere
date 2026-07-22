@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/*
+  Sans paramètre de fragment déclaré : lit directement l'attribut de modèle
+  "alarmStatus", pour pouvoir être renvoyé tel quel comme réponse htmx par le
+  contrôleur (voir docs/best-practices/frontend-conventions.md) tout en restant
+  importable depuis une autre page.
+*/-->
+<article th:fragment="alarmStatus" id="alarm-status" class="round"
+		 th:classappend="${alarmStatus.status() == 'TRIGGERED'} ? 'error' : (${alarmStatus.status() == 'DISARMED'} ? 'surface-variant' : 'primary')">
+	<h5 th:text="${alarmStatus.status()}">DISARMED</h5>
+	<p>Système : <span th:text="${alarmStatus.systemId()}">home-1</span></p>
+	<p th:if="${alarmStatus.triggered()}">⚠️ Déclenché</p>
+</article>
+</body>
+</html>

@@ -45,10 +45,11 @@ public final class DeviceController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public DeviceResponse register(@Valid @RequestBody final RegisterDeviceRequest request) {
+		final UUID id = UUID.fromString(request.id());
 		final DeviceType type = DeviceType.valueOf(request.type());
 		final UUID zoneId = request.zoneId() != null ? UUID.fromString(request.zoneId()) : null;
 		final String label = this.commonTextMapper.normalizeFreeText(request.label());
-		final Device device = this.registerDeviceUseCase.register(type, label, zoneId);
+		final Device device = this.registerDeviceUseCase.register(id, type, label, zoneId);
 		return this.deviceWebMapper.toResponse(device);
 	}
 

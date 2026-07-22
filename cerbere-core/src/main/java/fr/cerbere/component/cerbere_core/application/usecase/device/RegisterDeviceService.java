@@ -17,8 +17,8 @@ public final class RegisterDeviceService implements RegisterDeviceUseCase {
 	private final DeviceRepository deviceRepository;
 
 	@Override
-	public Device register(final DeviceType type, final String label, final UUID zoneId) {
-		final Device device = Device.register(type, label, zoneId);
+	public Device register(final UUID id, final DeviceType type, final String label, final UUID zoneId) {
+		final Device device = Device.register(id, type, label, zoneId);
 		return this.deviceRepository.save(device);
 	}
 }

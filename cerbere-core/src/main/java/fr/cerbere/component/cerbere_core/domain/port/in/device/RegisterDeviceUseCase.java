@@ -7,8 +7,11 @@ import java.util.UUID;
 
 /**
  * Port d'entrée : enregistrer un nouveau device dans le registre officiel.
+ * {@code id} est l'identifiant du device réel/simulé côté bridge (voir
+ * {@link Device#register(UUID, DeviceType, String, UUID)}), pas généré par
+ * ce use-case.
  */
 public interface RegisterDeviceUseCase {
 
-	Device register(DeviceType type, String label, UUID zoneId);
+	Device register(UUID id, DeviceType type, String label, UUID zoneId);
 }
