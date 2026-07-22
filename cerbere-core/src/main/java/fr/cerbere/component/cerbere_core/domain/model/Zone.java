@@ -1,5 +1,7 @@
 package fr.cerbere.component.cerbere_core.domain.model;
 
+import lombok.Getter;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -8,6 +10,7 @@ import java.util.UUID;
  * Zone regroupant un ensemble de devices (ex : "Rez-de-chaussée", "Étage").
  * Immuable : toute modification retourne une nouvelle instance.
  */
+@Getter
 public final class Zone {
 
 	private final UUID id;
@@ -42,17 +45,5 @@ public final class Zone {
 		final Set<UUID> updated = new LinkedHashSet<>(this.deviceIds);
 		updated.remove(deviceId);
 		return new Zone(this.id, this.name, updated);
-	}
-
-	public UUID getId() {
-		return this.id;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public Set<UUID> getDeviceIds() {
-		return this.deviceIds;
 	}
 }

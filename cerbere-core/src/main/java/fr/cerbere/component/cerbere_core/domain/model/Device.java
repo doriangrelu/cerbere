@@ -1,5 +1,7 @@
 package fr.cerbere.component.cerbere_core.domain.model;
 
+import lombok.Getter;
+
 import java.util.UUID;
 
 /**
@@ -8,6 +10,7 @@ import java.util.UUID;
  * instance. Le {@link DeviceType} n'est pas modifiable après création (le type
  * physique d'un capteur ne change pas).
  */
+@Getter
 public final class Device {
 
 	private final UUID id;
@@ -48,25 +51,5 @@ public final class Device {
 
 	public Device withZoneId(final UUID newZoneId) {
 		return new Device(this.id, this.type, this.label, newZoneId, this.enabled);
-	}
-
-	public UUID getId() {
-		return this.id;
-	}
-
-	public DeviceType getType() {
-		return this.type;
-	}
-
-	public String getLabel() {
-		return this.label;
-	}
-
-	public UUID getZoneId() {
-		return this.zoneId;
-	}
-
-	public boolean isEnabled() {
-		return this.enabled;
 	}
 }

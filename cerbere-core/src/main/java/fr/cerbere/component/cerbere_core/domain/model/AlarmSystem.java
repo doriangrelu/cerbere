@@ -1,6 +1,7 @@
 package fr.cerbere.component.cerbere_core.domain.model;
 
 import fr.cerbere.component.cerbere_core.domain.exception.AlarmNotArmedException;
+import lombok.Getter;
 
 /**
  * Agrégat racine du domaine alarme : mode d'armement courant et état déclenché.
@@ -9,7 +10,13 @@ import fr.cerbere.component.cerbere_core.domain.exception.AlarmNotArmedException
  * docs/best-practices/kafka-conventions.md). Immuable : toute transition
  * retourne une nouvelle instance.
  */
+@Getter
 public final class AlarmSystem {
+
+	/**
+	 * Identifiant métier stable de l'unique instance persistée (système mono-site).
+	 */
+	public static final String DEFAULT_SYSTEM_ID = "home-1";
 
 	private final String id;
 	private final AlarmMode mode;
@@ -73,17 +80,5 @@ public final class AlarmSystem {
 			return AlarmStatus.TRIGGERED;
 		}
 		return this.mode == AlarmMode.ARMED_AWAY ? AlarmStatus.ARMED_AWAY : AlarmStatus.ARMED_HOME;
-	}
-
-	public String getId() {
-		return this.id;
-	}
-
-	public AlarmMode getMode() {
-		return this.mode;
-	}
-
-	public boolean isTriggered() {
-		return this.triggered;
 	}
 }

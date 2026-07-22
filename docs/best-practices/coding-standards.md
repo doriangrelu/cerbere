@@ -17,8 +17,26 @@ Référence pour tout code écrit dans les modules Cerbère. Ce document est mai
 - Entités avec identité et cycle de vie (ex : `AlarmSystem`, `SimulatedDevice`) → classes à champs `private final`, méthodes "métier" qui retournent une nouvelle instance plutôt que de muter `this`.
 - **Exception à `final` sur la classe elle-même** : les classes que Spring doit pouvoir proxifier (ex : `@Repository` avec traduction d'exception, `@Transactional`) peuvent devoir rester non-`final` si le framework retombe sur un proxy CGLIB — contrainte du framework, pas un choix de style. Les champs de ces classes restent `private final`.
 - Utiliser `Stream`/`Optional`/lambdas plutôt que des boucles impératives et des `null` non protégés, sans sacrifier la lisibilité (pas de chaînes de streams illisibles pour l'unique plaisir du style fonctionnel).
+- **Préférer une méthode référence à une lambda équivalente** dès que la lambda ne fait qu'appeler une méthode existante sans logique propre (`.map(DeviceMapper::toDomain)` plutôt que `.map(d -> DeviceMapper.toDomain(d))`, `.filter(Device::isEnabled)` plutôt que `.filter(d -> d.isEnabled())`). Ne s'applique pas quand la lambda capture une variable supplémentaire ou contient de la logique (ex : `.orElseThrow(() -> new DeviceNotFoundException(id))` reste une lambda, `id` étant capturé).
 - `var` autorisé quand le type est évident au site d'appel, sinon type explicite.
 - **`this.` obligatoire** pour tout accès à un champ ou un appel à une méthode d'instance depuis l'intérieur de la classe (ex : `this.simulatedDeviceRepository.save(...)`, pas `simulatedDeviceRepository.save(...)`). Objectif : lever toute ambiguïté à la relecture entre un champ, une variable locale et un paramètre. S'applique au code de production comme aux tests. Ne s'applique pas aux appels de méthodes/champs statiques (`MonEnum.valueOf(...)`, pas `this.` sur du statique) ni à l'intérieur d'un `record`/enum sans champ mutable propre.
+
+## Lombok
+
+- **`@RequiredArgsConstructor`** sur toute classe dont le seul constructeur injecte des dépendances `private final` (use-cases, adapters, contrôleurs, schedulers) — remplace le constructeur écrit à la main. Ne pas utiliser `@AllArgsConstructor`/`@NoArgsConstructor` qui cassent l'immuabilité ou l'invariant "toutes les dépendances sont obligatoires".
+- **`@Getter`** sur les entités de domaine (`Device`, `Zone`, `AlarmSystem`, `SimulatedDevice`...) pour remplacer les accesseurs écrits à la main. Ne génère jamais de setter (`@Setter` interdit sur ces classes, contraire à l'immuabilité).
+- **`@Slf4j`** pour tout logger, plutôt que `private static final Logger LOGGER = LoggerFactory.getLogger(...)` écrit à la main.
+- Ne s'applique pas aux `record` (déjà immuables et déjà pourvus d'accesseurs/constructeur par le langage) ni aux classes avec constructeur privé + fabriques statiques (`register()`/`restore()` sur les entités) : Lombok ne génère pas ce pattern, le constructeur privé reste écrit à la main, seul `@Getter` s'applique par-dessus.
+
+## MapStruct
+
+- Les traducteurs structurels **champ à champ** entre couches (domaine ↔ document Mongo, domaine → DTO REST) sont des interfaces MapStruct (`@Mapper(componentModel = "spring")`), pas des classes utilitaires statiques écrites à la main.
+- **Aucune expression Java inline** (`@Mapping(target = "x", expression = "java(...)")` interdit) : toute conversion non triviale (`UUID` ↔ `String`, normalisation de texte...) passe par une **méthode nommée** (`@Named("...")` + `qualifiedByName`), idéalement **partagée** entre mappers via `uses = {...}` plutôt que dupliquée dans chaque interface.
+- Ne s'applique **pas** aux traducteurs qui contiennent une vraie logique métier (choix conditionnel du `eventType`, construction du `payload` selon le type d'événement...) — ceux-là restent des `Factory` écrites à la main (voir tableau de suffixes), MapStruct n'étant pertinent que pour du mapping de champs, pas de la prise de décision.
+
+## Normalisation des champs texte libre (couche présentation)
+
+Tout champ alimenté par une saisie utilisateur libre (`label` d'un device, `name` d'une zone...) est **trimé et mis en minuscule** au moment du mapping DTO REST → domaine, dans la couche `adapter/in/web` — jamais plus profond (le domaine ne fait pas d'hypothèse sur la casse/les espaces de ce qu'on lui passe). Centraliser cette normalisation dans une méthode nommée partagée entre les mappers MapStruct concernés plutôt que de la dupliquer.
 
 ## Nommage
 
