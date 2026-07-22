@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(java -version 2>&1)",
+      "PowerShell(mvn -version 2>&1)",
+      "Bash(./mvnw -q -o test)",
+      "Bash(docker compose *)",
+      "Bash(find ~/.m2/repository/org/springframework/boot -maxdepth 1 -iname \"*test*\" 2>&1)",
+      "Bash(./mvnw -q test)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Read(//tmp/**)",
+      "Bash(tail -100 /tmp/devices-mock-run.log 2>&1)",
+      "Bash(nohup ./mvnw -q spring-boot:run)",
+      "Bash(echo \"PID=$!\")",
+      "PowerShell(Get-Process -Name java -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8081 -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Content \"$env:LOCALAPPDATA\\\\Temp\\\\devices-mock-run3.log\" -Tail 60)",
+      "PowerShell(Select-String -Path \"$env:LOCALAPPDATA\\\\Temp\\\\devices-mock-run3.log\" -Pattern \"ERROR|Exception:|Caused by:\" | Select-Object -Last 25)"
+    ]
+  }
+}
