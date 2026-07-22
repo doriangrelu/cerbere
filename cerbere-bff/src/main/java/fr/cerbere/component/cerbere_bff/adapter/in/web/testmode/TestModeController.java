@@ -2,7 +2,6 @@ package fr.cerbere.component.cerbere_bff.adapter.in.web.testmode;
 
 import fr.cerbere.component.cerbere_bff.client.devicemock.DeviceMockClient;
 import fr.cerbere.component.cerbere_bff.client.zone.ZoneCoreClient;
-import fr.cerbere.shared.dto.devicemock.RegisterSimulatedDeviceRequest;
 import fr.cerbere.shared.dto.devicemock.SimulatedDeviceResponse;
 import fr.cerbere.shared.dto.zone.ZoneResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,60 +31,44 @@ import java.util.stream.Collectors;
 @ConditionalOnProperty(prefix = "cerbere.bff.test-mode", name = "enabled", havingValue = "true")
 public final class TestModeController {
 
-	private static final String SIMULATED_DEVICES_ATTRIBUTE = "simulatedDevices";
-	private static final String ZONES_ATTRIBUTE = "zones";
-	private static final String SIMULATED_DEVICE_ERROR_ATTRIBUTE = "simulatedDeviceError";
-	private static final String SIMULATED_DEVICE_TABLE_FRAGMENT = "fragments/simulated-device-table :: simulatedDeviceTable";
+    private static final String SIMULATED_DEVICES_ATTRIBUTE = "simulatedDevices";
+    private static final String ZONES_ATTRIBUTE = "zones";
+    private static final String SIMULATED_DEVICE_ERROR_ATTRIBUTE = "simulatedDeviceError";
+    private static final String SIMULATED_DEVICE_TABLE_FRAGMENT = "fragments/simulated-device-table :: simulatedDeviceTable";
 
-	private final DeviceMockClient deviceMockClient;
-	private final ZoneCoreClient zoneCoreClient;
+    private final DeviceMockClient deviceMockClient;
+    private final ZoneCoreClient zoneCoreClient;
 
-	@GetMapping("/test-mode")
-	public String home(final Model model) {
-		this.populateModel(model);
-		return "testmode/dashboard";
-	}
+    @GetMapping("/test-mode")
+    public String home(final Model model) {
+        this.populateModel(model);
+        return "testmode/dashboard";
+    }
 
-	@PostMapping("/test-mode/devices")
-	public String register(@RequestParam final String type,
-							@RequestParam final String label,
-							@RequestParam(required = false) final String zoneId,
-							@RequestParam(required = false, defaultValue = "false") final boolean autoSimulate,
-							final Model model) {
-		if (zoneId != null && !zoneId.isBlank() && this.zoneCoreClient.listAll().stream().noneMatch(zone -> zone.id().equals(zoneId))) {
-			model.addAttribute(SIMULATED_DEVICE_ERROR_ATTRIBUTE, "Zone sélectionnée introuvable.");
-			this.populateModel(model);
-			return SIMULATED_DEVICE_TABLE_FRAGMENT;
-		}
-		this.deviceMockClient.register(new RegisterSimulatedDeviceRequest(type, label, this.blankToNull(zoneId), autoSimulate));
-		this.populateModel(model);
-		return SIMULATED_DEVICE_TABLE_FRAGMENT;
-	}
+    @PostMapping("/test-mode/devices/{id}/events")
+    public String triggerEvent(@PathVariable final String id, @RequestParam final String state, final Model model) {
+        this.deviceMockClient.triggerEvent(id, state);
+        this.populateModel(model);
+        return SIMULATED_DEVICE_TABLE_FRAGMENT;
+    }
 
-	@PostMapping("/test-mode/devices/{id}/events")
-	public String triggerEvent(@PathVariable final String id, @RequestParam final String state, final Model model) {
-		this.deviceMockClient.triggerEvent(id, state);
-		this.populateModel(model);
-		return SIMULATED_DEVICE_TABLE_FRAGMENT;
-	}
+    private void populateModel(final Model model) {
+        final List<ZoneResponse> zones = this.zoneCoreClient.listAll();
+        final Map<String, String> zoneNamesById = zones.stream()
+                .collect(Collectors.toMap(ZoneResponse::id, ZoneResponse::name));
+        final List<SimulatedDeviceRow> rows = this.deviceMockClient.listAll().stream()
+                .map(device -> this.toRow(device, zoneNamesById))
+                .toList();
+        model.addAttribute(SIMULATED_DEVICES_ATTRIBUTE, rows);
+        model.addAttribute(ZONES_ATTRIBUTE, zones);
+    }
 
-	private void populateModel(final Model model) {
-		final List<ZoneResponse> zones = this.zoneCoreClient.listAll();
-		final Map<String, String> zoneNamesById = zones.stream()
-			.collect(Collectors.toMap(ZoneResponse::id, ZoneResponse::name));
-		final List<SimulatedDeviceRow> rows = this.deviceMockClient.listAll().stream()
-			.map(device -> this.toRow(device, zoneNamesById))
-			.toList();
-		model.addAttribute(SIMULATED_DEVICES_ATTRIBUTE, rows);
-		model.addAttribute(ZONES_ATTRIBUTE, zones);
-	}
+    private SimulatedDeviceRow toRow(final SimulatedDeviceResponse device, final Map<String, String> zoneNamesById) {
+        final String zoneName = device.zoneId() == null ? null : zoneNamesById.getOrDefault(device.zoneId(), "Zone supprimée");
+        return new SimulatedDeviceRow(device.id(), device.type(), device.label(), zoneName, device.autoSimulate(), device.currentState());
+    }
 
-	private SimulatedDeviceRow toRow(final SimulatedDeviceResponse device, final Map<String, String> zoneNamesById) {
-		final String zoneName = device.zoneId() == null ? null : zoneNamesById.getOrDefault(device.zoneId(), "Zone supprimée");
-		return new SimulatedDeviceRow(device.id(), device.type(), device.label(), zoneName, device.autoSimulate(), device.currentState());
-	}
-
-	private String blankToNull(final String value) {
-		return (value == null || value.isBlank()) ? null : value;
-	}
+    private String blankToNull(final String value) {
+        return (value == null || value.isBlank()) ? null : value;
+    }
 }

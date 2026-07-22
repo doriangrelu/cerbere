@@ -2,6 +2,7 @@ package fr.cerbere.component.cerbere_core.adapter.config;
 
 import fr.cerbere.component.cerbere_core.infrastructure.messaging.kafka.producer.AlarmStateChangedKafkaProducer;
 import fr.cerbere.component.cerbere_core.infrastructure.messaging.kafka.producer.AlertKafkaProducer;
+import fr.cerbere.component.cerbere_core.infrastructure.messaging.kafka.producer.DeviceKafkaProducer;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.config.TopicConfig;
 import org.springframework.context.annotation.Bean;
@@ -19,25 +20,30 @@ import java.time.Duration;
 @Configuration(proxyBeanMethods = false)
 public final class KafkaTopicConfig {
 
-	private static final int PARTITIONS = 3;
-	private static final int REPLICAS = 1;
-	private static final long RETENTION = Duration.ofDays(3).toMillis();
+    private static final int PARTITIONS = 3;
+    private static final int REPLICAS = 1;
+    private static final long RETENTION = Duration.ofDays(3).toMillis();
 
-	@Bean
-	public NewTopic alarmStateChangedTopic() {
-		return this.topic(AlarmStateChangedKafkaProducer.TOPIC);
-	}
+    @Bean
+    public NewTopic alarmStateChangedTopic() {
+        return this.topic(AlarmStateChangedKafkaProducer.TOPIC);
+    }
 
-	@Bean
-	public NewTopic alarmAlertsTopic() {
-		return this.topic(AlertKafkaProducer.TOPIC);
-	}
+    @Bean
+    public NewTopic alarmAlertsTopic() {
+        return this.topic(AlertKafkaProducer.TOPIC);
+    }
 
-	private NewTopic topic(final String name) {
-		return TopicBuilder.name(name)
-			.partitions(PARTITIONS)
-			.replicas(REPLICAS)
-			.config(TopicConfig.RETENTION_MS_CONFIG, Long.toString(RETENTION))
-			.build();
-	}
+    @Bean
+    public NewTopic deviceStateTopic() {
+        return this.topic(DeviceKafkaProducer.TOPIC);
+    }
+
+    private NewTopic topic(final String name) {
+        return TopicBuilder.name(name)
+                .partitions(PARTITIONS)
+                .replicas(REPLICAS)
+                .config(TopicConfig.RETENTION_MS_CONFIG, Long.toString(RETENTION))
+                .build();
+    }
 }

@@ -17,18 +17,19 @@ import java.util.UUID;
 @Mapper(componentModel = "spring", uses = CommonIdMapper.class)
 public interface DeviceMapper {
 
-	@Mapping(target = "id", source = "id", qualifiedByName = "uuidToString")
-	@Mapping(target = "zoneId", source = "zoneId", qualifiedByName = "uuidToString")
-	DeviceDocument toDocument(Device device);
+    @Mapping(target = "id", source = "id", qualifiedByName = "uuidToString")
+    @Mapping(target = "zoneId", source = "zoneId", qualifiedByName = "uuidToString")
+    DeviceDocument toDocument(Device device);
 
-	default Device toDomain(final DeviceDocument document) {
-		final String zoneId = document.zoneId();
-		return Device.restore(
-			UUID.fromString(document.id()),
-			DeviceType.valueOf(document.type()),
-			document.label(),
-			zoneId != null ? UUID.fromString(zoneId) : null,
-			document.enabled()
-		);
-	}
+    default Device toDomain(final DeviceDocument document) {
+        final String zoneId = document.zoneId();
+        return Device.restore(
+                UUID.fromString(document.id()),
+                DeviceType.valueOf(document.type()),
+                document.label(),
+                zoneId != null ? UUID.fromString(zoneId) : null,
+                document.violation(),
+                document.enabled()
+        );
+    }
 }

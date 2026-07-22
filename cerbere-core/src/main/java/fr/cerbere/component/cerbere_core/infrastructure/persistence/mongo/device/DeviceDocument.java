@@ -8,10 +8,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
  */
 @Document(collection = "devices")
 public record DeviceDocument(
-	@Id String id,
-	String type,
-	String label,
-	String zoneId,
-	boolean enabled
+        @Id String id,
+        String type,
+        String label,
+        String zoneId,
+        boolean violation,
+        boolean enabled
 ) {
 }

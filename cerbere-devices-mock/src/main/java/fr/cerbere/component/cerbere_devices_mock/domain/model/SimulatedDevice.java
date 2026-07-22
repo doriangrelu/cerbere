@@ -11,71 +11,71 @@ import java.util.UUID;
  */
 public final class SimulatedDevice {
 
-	private final UUID id;
-	private final DeviceType type;
-	private final String label;
-	private final UUID zoneId;
-	private final boolean autoSimulate;
-	private final DeviceState currentState;
+    private final UUID id;
+    private final DeviceType type;
+    private final String label;
+    private final UUID zoneId;
+    private final boolean autoSimulate;
+    private final DeviceState currentState;
 
-	private SimulatedDevice(final UUID id, final DeviceType type, final String label, final UUID zoneId,
-							 final boolean autoSimulate, final DeviceState currentState) {
-		this.id = id;
-		this.type = type;
-		this.label = label;
-		this.zoneId = zoneId;
-		this.autoSimulate = autoSimulate;
-		this.currentState = currentState;
-	}
+    private SimulatedDevice(final UUID id, final DeviceType type, final String label, final UUID zoneId,
+                            final boolean autoSimulate, final DeviceState currentState) {
+        this.id = id;
+        this.type = type;
+        this.label = label;
+        this.zoneId = zoneId;
+        this.autoSimulate = autoSimulate;
+        this.currentState = currentState;
+    }
 
-	/**
-	 * Enregistre un nouveau device simulé, avec l'état initial par défaut de son type.
-	 */
-	public static SimulatedDevice register(final DeviceType type, final String label, final UUID zoneId, final boolean autoSimulate) {
-		return new SimulatedDevice(UUID.randomUUID(), type, label, zoneId, autoSimulate, type.initialState());
-	}
+    /**
+     * Enregistre un nouveau device simulé, avec l'état initial par défaut de son type.
+     */
+    public static SimulatedDevice register(final UUID id, final DeviceType type, final String label, final UUID zoneId, final boolean autoSimulate) {
+        return new SimulatedDevice(id, type, label, zoneId, autoSimulate, type.initialState());
+    }
 
-	/**
-	 * Reconstruit un device simulé depuis la persistance (identifiant et état déjà connus).
-	 */
-	public static SimulatedDevice restore(final UUID id, final DeviceType type, final String label, final UUID zoneId,
-										   final boolean autoSimulate, final DeviceState currentState) {
-		return new SimulatedDevice(id, type, label, zoneId, autoSimulate, currentState);
-	}
+    /**
+     * Reconstruit un device simulé depuis la persistance (identifiant et état déjà connus).
+     */
+    public static SimulatedDevice restore(final UUID id, final DeviceType type, final String label, final UUID zoneId,
+                                          final boolean autoSimulate, final DeviceState currentState) {
+        return new SimulatedDevice(id, type, label, zoneId, autoSimulate, currentState);
+    }
 
-	/**
-	 * Retourne une nouvelle instance du device avec l'état donné.
-	 *
-	 * @throws UnsupportedDeviceCommandException si l'état ne correspond pas au type du device
-	 */
-	public SimulatedDevice withState(final DeviceState newState) {
-		if (!this.type.supports(newState)) {
-			throw new UnsupportedDeviceCommandException(this.id, this.type, newState);
-		}
-		return new SimulatedDevice(this.id, this.type, this.label, this.zoneId, this.autoSimulate, newState);
-	}
+    /**
+     * Retourne une nouvelle instance du device avec l'état donné.
+     *
+     * @throws UnsupportedDeviceCommandException si l'état ne correspond pas au type du device
+     */
+    public SimulatedDevice withState(final DeviceState newState) {
+        if (!this.type.supports(newState)) {
+            throw new UnsupportedDeviceCommandException(this.id, this.type, newState);
+        }
+        return new SimulatedDevice(this.id, this.type, this.label, this.zoneId, this.autoSimulate, newState);
+    }
 
-	public UUID getId() {
-		return this.id;
-	}
+    public UUID getId() {
+        return this.id;
+    }
 
-	public DeviceType getType() {
-		return this.type;
-	}
+    public DeviceType getType() {
+        return this.type;
+    }
 
-	public String getLabel() {
-		return this.label;
-	}
+    public String getLabel() {
+        return this.label;
+    }
 
-	public UUID getZoneId() {
-		return this.zoneId;
-	}
+    public UUID getZoneId() {
+        return this.zoneId;
+    }
 
-	public boolean isAutoSimulate() {
-		return this.autoSimulate;
-	}
+    public boolean isAutoSimulate() {
+        return this.autoSimulate;
+    }
 
-	public DeviceState getCurrentState() {
-		return this.currentState;
-	}
+    public DeviceState getCurrentState() {
+        return this.currentState;
+    }
 }

@@ -1,4 +1,4 @@
-package fr.cerbere.component.cerbere_core.adapter.config;
+package fr.cerbere.component.cerbere_devices_mock.adapter.config;
 
 import fr.cerbere.shared.event.EventEnvelope;
 import fr.cerbere.shared.kafka.JacksonEventDeserializer;

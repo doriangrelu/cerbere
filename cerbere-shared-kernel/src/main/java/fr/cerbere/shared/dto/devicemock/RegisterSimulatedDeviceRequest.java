@@ -1,7 +1,6 @@
 package fr.cerbere.shared.dto.devicemock;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import java.util.UUID;
 
 /**
  * Requête d'enregistrement d'un nouveau device simulé. {@code type} doit
@@ -10,9 +9,7 @@ import jakarta.validation.constraints.NotNull;
  * {@code cerbere-devices-mock} (récepteur).
  */
 public record RegisterSimulatedDeviceRequest(
-	@NotNull String type,
-	@NotBlank String label,
-	String zoneId,
-	boolean autoSimulate
+        String id,
+        boolean autoSimulate
 ) {
 }

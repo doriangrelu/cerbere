@@ -25,6 +25,7 @@ import fr.cerbere.component.cerbere_core.domain.port.in.zone.UpdateZoneUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmStateChangedPublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmSystemRepository;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlertPublisher;
+import fr.cerbere.component.cerbere_core.domain.port.out.device.DevicePublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceRepository;
 import fr.cerbere.component.cerbere_core.domain.port.out.zone.ZoneRepository;
 import org.springframework.context.annotation.Bean;
@@ -38,72 +39,73 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public final class UseCaseConfig {
 
-	@Bean
-	public RegisterDeviceUseCase registerDeviceUseCase(final DeviceRepository deviceRepository) {
-		return new RegisterDeviceService(deviceRepository);
-	}
+    @Bean
+    public RegisterDeviceUseCase registerDeviceUseCase(final DeviceRepository deviceRepository, final DevicePublisher devicePublisher) {
+        return new RegisterDeviceService(deviceRepository, devicePublisher);
+    }
 
-	@Bean
-	public UpdateDeviceUseCase updateDeviceUseCase(final DeviceRepository deviceRepository) {
-		return new UpdateDeviceService(deviceRepository);
-	}
+    @Bean
+    public UpdateDeviceUseCase updateDeviceUseCase(final DeviceRepository deviceRepository) {
+        return new UpdateDeviceService(deviceRepository);
+    }
 
-	@Bean
-	public DeleteDeviceUseCase deleteDeviceUseCase(final DeviceRepository deviceRepository) {
-		return new DeleteDeviceService(deviceRepository);
-	}
+    @Bean
+    public DeleteDeviceUseCase deleteDeviceUseCase(final DeviceRepository deviceRepository) {
+        return new DeleteDeviceService(deviceRepository);
+    }
 
-	@Bean
-	public ListDevicesUseCase listDevicesUseCase(final DeviceRepository deviceRepository) {
-		return new ListDevicesService(deviceRepository);
-	}
+    @Bean
+    public ListDevicesUseCase listDevicesUseCase(final DeviceRepository deviceRepository) {
+        return new ListDevicesService(deviceRepository);
+    }
 
-	@Bean
-	public RegisterZoneUseCase registerZoneUseCase(final ZoneRepository zoneRepository) {
-		return new RegisterZoneService(zoneRepository);
-	}
+    @Bean
+    public RegisterZoneUseCase registerZoneUseCase(final ZoneRepository zoneRepository) {
+        return new RegisterZoneService(zoneRepository);
+    }
 
-	@Bean
-	public UpdateZoneUseCase updateZoneUseCase(final ZoneRepository zoneRepository) {
-		return new UpdateZoneService(zoneRepository);
-	}
+    @Bean
+    public UpdateZoneUseCase updateZoneUseCase(final ZoneRepository zoneRepository) {
+        return new UpdateZoneService(zoneRepository);
+    }
 
-	@Bean
-	public DeleteZoneUseCase deleteZoneUseCase(final ZoneRepository zoneRepository) {
-		return new DeleteZoneService(zoneRepository);
-	}
+    @Bean
+    public DeleteZoneUseCase deleteZoneUseCase(final ZoneRepository zoneRepository) {
+        return new DeleteZoneService(zoneRepository);
+    }
 
-	@Bean
-	public ListZonesUseCase listZonesUseCase(final ZoneRepository zoneRepository) {
-		return new ListZonesService(zoneRepository);
-	}
+    @Bean
+    public ListZonesUseCase listZonesUseCase(final ZoneRepository zoneRepository) {
+        return new ListZonesService(zoneRepository);
+    }
 
-	@Bean
-	public AlarmSystemService alarmSystemService(final AlarmSystemRepository alarmSystemRepository,
-												  final AlarmStateChangedPublisher alarmStateChangedPublisher) {
-		return new AlarmSystemService(alarmSystemRepository, alarmStateChangedPublisher);
-	}
+    @Bean
+    public AlarmSystemService alarmSystemService(final AlarmSystemRepository alarmSystemRepository,
+                                                 final AlarmStateChangedPublisher alarmStateChangedPublisher,
+                                                 final DeviceRepository deviceRepository) {
+        return new AlarmSystemService(deviceRepository, alarmSystemRepository, alarmStateChangedPublisher);
+    }
 
-	@Bean
-	public ArmSystemUseCase armSystemUseCase(final AlarmSystemService alarmSystemService) {
-		return alarmSystemService;
-	}
+    @Bean
+    public ArmSystemUseCase armSystemUseCase(final AlarmSystemService alarmSystemService) {
+        return alarmSystemService;
+    }
 
-	@Bean
-	public DisarmSystemUseCase disarmSystemUseCase(final AlarmSystemService alarmSystemService) {
-		return alarmSystemService;
-	}
+    @Bean
+    public DisarmSystemUseCase disarmSystemUseCase(final AlarmSystemService alarmSystemService) {
+        return alarmSystemService;
+    }
 
-	@Bean
-	public GetAlarmStatusUseCase getAlarmStatusUseCase(final AlarmSystemService alarmSystemService) {
-		return alarmSystemService;
-	}
+    @Bean
+    public GetAlarmStatusUseCase getAlarmStatusUseCase(final AlarmSystemService alarmSystemService) {
+        return alarmSystemService;
+    }
 
-	@Bean
-	public HandleDeviceEventUseCase handleDeviceEventUseCase(final AlarmSystemRepository alarmSystemRepository,
-															  final DeviceRepository deviceRepository,
-															  final AlarmStateChangedPublisher alarmStateChangedPublisher,
-															  final AlertPublisher alertPublisher) {
-		return new HandleDeviceEventService(alarmSystemRepository, deviceRepository, alarmStateChangedPublisher, alertPublisher);
-	}
+    @Bean
+    public HandleDeviceEventUseCase handleDeviceEventUseCase(final AlarmSystemRepository alarmSystemRepository,
+                                                             final DeviceRepository deviceRepository,
+                                                             final AlarmStateChangedPublisher alarmStateChangedPublisher,
+                                                             final AlertPublisher alertPublisher) {
+        return new HandleDeviceEventService(alarmSystemRepository, deviceRepository, alarmStateChangedPublisher, alertPublisher);
+    }
 }

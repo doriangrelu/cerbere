@@ -26,68 +26,79 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public final class HandleDeviceEventService implements HandleDeviceEventUseCase {
 
-	private static final String MOTION_EVENT_PREFIX = "device.motion";
-	private static final String CONTACT_STATE_CHANGED = "device.contact.state_changed";
-	private static final String MOTION_DETECTED = "device.motion.detected";
+    private static final String MOTION_EVENT_PREFIX = "device.motion";
+    private static final String CONTACT_STATE_CHANGED = "device.contact.state_changed";
+    private static final String MOTION_DETECTED = "device.motion.detected";
 
-	private final AlarmSystemRepository alarmSystemRepository;
-	private final DeviceRepository deviceRepository;
-	private final AlarmStateChangedPublisher alarmStateChangedPublisher;
-	private final AlertPublisher alertPublisher;
+    private final AlarmSystemRepository alarmSystemRepository;
+    private final DeviceRepository deviceRepository;
+    private final AlarmStateChangedPublisher alarmStateChangedPublisher;
+    private final AlertPublisher alertPublisher;
 
-	@Override
-	public void handle(final DeviceEventReport report) {
-		final AlarmSystem alarmSystem = this.alarmSystemRepository.findById(AlarmSystem.DEFAULT_SYSTEM_ID)
-			.orElseGet(() -> AlarmSystem.initial(AlarmSystem.DEFAULT_SYSTEM_ID));
-		if (alarmSystem.getMode() == AlarmMode.DISARMED) {
-			return;
-		}
+    @Override
+    public void handle(final DeviceEventReport report) {
+        final AlarmSystem alarmSystem = this.alarmSystemRepository.findById(AlarmSystem.DEFAULT_SYSTEM_ID)
+                .orElseGet(() -> AlarmSystem.initial(AlarmSystem.DEFAULT_SYSTEM_ID));
 
-		final Device device = this.deviceRepository.findById(report.deviceId()).orElse(null);
-		if (device == null || !device.isEnabled()) {
-			return;
-		}
+        final Device device = this.deviceRepository.findById(report.deviceId()).orElse(null);
+        final boolean isViolation = this.isViolation(alarmSystem.getMode(), report);
 
-		if (!this.isViolation(alarmSystem.getMode(), report)) {
-			return;
-		}
+        this.processDevice(isViolation, device);
 
-		if (!alarmSystem.isTriggered()) {
-			this.triggerAlarm(alarmSystem);
-		}
-		this.raiseAlert(device, report);
-	}
+        if (alarmSystem.getMode() == AlarmMode.DISARMED) {
+            return;
+        }
 
-	private boolean isViolation(final AlarmMode mode, final DeviceEventReport report) {
-		final boolean isMotionEvent = report.eventType().startsWith(MOTION_EVENT_PREFIX);
-		if (mode == AlarmMode.ARMED_HOME && isMotionEvent) {
-			return false;
-		}
-		return switch (report.eventType()) {
-			case CONTACT_STATE_CHANGED -> "OPEN".equals(report.payload().get("state"));
-			case MOTION_DETECTED -> Boolean.TRUE.equals(report.payload().get("detected"));
-			default -> false;
-		};
-	}
+        if (device == null || !device.isEnabled()) {
+            return;
+        }
 
-	private void triggerAlarm(final AlarmSystem alarmSystem) {
-		final AlarmSystem triggered = alarmSystem.trigger();
-		this.alarmSystemRepository.save(triggered);
-		final AlarmStateChanged event = new AlarmStateChanged(
-			triggered.getId(), alarmSystem.getMode(), triggered.getMode(), true, Instant.now(), UUID.randomUUID());
-		this.alarmStateChangedPublisher.publish(event);
-	}
+        if (!isViolation) {
+            return;
+        }
 
-	private void raiseAlert(final Device device, final DeviceEventReport report) {
-		final AlertRaised alert = new AlertRaised(
-			UUID.randomUUID(),
-			device.getZoneId(),
-			device.getId(),
-			AlertSeverity.CRITICAL,
-			"Violation detected on " + device.getLabel(),
-			report.occurredAt(),
-			report.correlationId()
-		);
-		this.alertPublisher.publish(alert);
-	}
+        if (!alarmSystem.isTriggered()) {
+            this.triggerAlarm(alarmSystem);
+        }
+        this.raiseAlert(device, report);
+    }
+
+    private void processDevice(final boolean isViolation, final Device device) {
+        final Device current = isViolation ? device.withViolation() : device.withoutViolation();
+        this.deviceRepository.save(current);
+    }
+
+    private boolean isViolation(final AlarmMode mode, final DeviceEventReport report) {
+        final boolean isMotionEvent = report.eventType().startsWith(MOTION_EVENT_PREFIX);
+        if (mode == AlarmMode.ARMED_HOME && isMotionEvent) {
+            return false;
+        }
+        return switch (report.eventType()) {
+            case CONTACT_STATE_CHANGED -> "OPEN".equals(report.payload().get("state"));
+            case MOTION_DETECTED -> Boolean.TRUE.equals(report.payload().get("detected"));
+            default -> false;
+        };
+    }
+
+    private void triggerAlarm(final AlarmSystem alarmSystem) {
+        final AlarmSystem triggered = alarmSystem.trigger();
+        this.alarmSystemRepository.save(triggered);
+        final AlarmStateChanged event = new AlarmStateChanged(
+                triggered.getId(), alarmSystem.getMode(), triggered.getMode(), true, Instant.now(), UUID.randomUUID());
+        this.alarmStateChangedPublisher.publish(event);
+    }
+
+    private void raiseAlert(final Device device, final DeviceEventReport report) {
+        final AlertRaised alert = new AlertRaised(
+                UUID.randomUUID(),
+                device.getZoneId(),
+                device.getId(),
+                AlertSeverity.CRITICAL,
+                "Violation detected on " + device.getLabel(),
+                report.occurredAt(),
+                report.correlationId()
+        );
+        this.alertPublisher.publish(alert);
+    }
+
 }

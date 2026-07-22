@@ -5,13 +5,15 @@ import fr.cerbere.shared.config.PermitAllSecurityConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 @Import({CommonJacksonConfig.class, PermitAllSecurityConfig.class})
 public class CerbereDevicesMockApplication {
 
-	public static void main(final String[] args) {
-		SpringApplication.run(CerbereDevicesMockApplication.class, args);
-	}
+    static void main(final String[] args) {
+        SpringApplication.run(CerbereDevicesMockApplication.class, args);
+    }
 
 }

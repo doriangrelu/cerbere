@@ -10,5 +10,6 @@ import java.util.UUID;
  */
 public interface RegisterSimulatedDeviceUseCase {
 
-	SimulatedDevice register(DeviceType type, String label, UUID zoneId, boolean autoSimulate);
+    SimulatedDevice register(UUID id, DeviceType type, String label, UUID zoneId, boolean autoSimulate);
+
 }
