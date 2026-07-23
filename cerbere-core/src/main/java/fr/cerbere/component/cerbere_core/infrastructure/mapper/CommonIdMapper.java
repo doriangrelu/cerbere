@@ -3,10 +3,7 @@ package fr.cerbere.component.cerbere_core.infrastructure.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Named;
 
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Méthodes de conversion nommées et partagées entre les mappers MapStruct du
@@ -27,15 +24,5 @@ public interface CommonIdMapper {
 	@Named("stringToUuid")
 	default UUID stringToUuid(final String id) {
 		return id != null ? UUID.fromString(id) : null;
-	}
-
-	@Named("uuidSetToStringList")
-	default List<String> uuidSetToStringList(final Set<UUID> ids) {
-		return ids != null ? ids.stream().map(UUID::toString).toList() : null;
-	}
-
-	@Named("stringListToUuidSet")
-	default Set<UUID> stringListToUuidSet(final List<String> ids) {
-		return ids != null ? ids.stream().map(UUID::fromString).collect(Collectors.toSet()) : null;
 	}
 }

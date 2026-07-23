@@ -5,9 +5,7 @@ import fr.cerbere.component.cerbere_core.infrastructure.mapper.CommonIdMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Traduction entre le modèle de domaine {@link Zone} et sa représentation Mongo.
@@ -19,13 +17,9 @@ import java.util.stream.Collectors;
 public interface ZoneMapper {
 
 	@Mapping(target = "id", source = "id", qualifiedByName = "uuidToString")
-	@Mapping(target = "deviceIds", source = "deviceIds", qualifiedByName = "uuidSetToStringList")
 	ZoneDocument toDocument(Zone zone);
 
 	default Zone toDomain(final ZoneDocument document) {
-		final Set<UUID> deviceIds = document.deviceIds().stream()
-			.map(UUID::fromString)
-			.collect(Collectors.toSet());
-		return Zone.restore(UUID.fromString(document.id()), document.name(), deviceIds, document.version());
+		return Zone.restore(UUID.fromString(document.id()), document.name(), document.violation(), document.version());
 	}
 }

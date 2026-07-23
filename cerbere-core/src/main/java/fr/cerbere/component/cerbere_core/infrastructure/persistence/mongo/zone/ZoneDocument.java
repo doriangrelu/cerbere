@@ -4,17 +4,16 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
-
 /**
  * Représentation Mongo d'une {@code Zone}. {@code version} (verrouillage
- * optimiste Mongo) protège contre les écritures concurrentes.
+ * optimiste Mongo) protège contre les écritures concurrentes. Pas de collection
+ * de devices ici — voir ADR 0017.
  */
 @Document(collection = "zones")
 public record ZoneDocument(
 	@Id String id,
 	String name,
-	List<String> deviceIds,
+	boolean violation,
 	@Version Long version
 ) {
 }

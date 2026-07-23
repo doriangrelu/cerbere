@@ -8,6 +8,7 @@ import fr.cerbere.component.cerbere_core.domain.model.AlarmSystem;
 import fr.cerbere.component.cerbere_core.domain.model.Device;
 import fr.cerbere.component.cerbere_core.domain.model.DeviceEventReport;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.HandleDeviceEventUseCase;
+import fr.cerbere.component.cerbere_core.domain.port.in.zone.RecomputeZoneViolationUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmStateChangedPublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmSystemRepository;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlertPublisher;
@@ -40,6 +41,7 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
     private final DeviceRepository deviceRepository;
     private final AlarmStateChangedPublisher alarmStateChangedPublisher;
     private final AlertPublisher alertPublisher;
+    private final RecomputeZoneViolationUseCase recomputeZoneViolationUseCase;
 
     @Override
     public void handle(final DeviceEventReport report) {
@@ -75,7 +77,9 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
 
     private Device processDevice(final boolean isViolation, final Device device) {
         final Device current = isViolation ? device.withViolation() : device.withoutViolation();
-        return this.deviceRepository.save(current);
+        final Device saved = this.deviceRepository.save(current);
+        this.recomputeZoneViolationUseCase.recompute(saved.getZoneId());
+        return saved;
     }
 
     private boolean isViolation(final AlarmMode mode, final DeviceEventReport report) {

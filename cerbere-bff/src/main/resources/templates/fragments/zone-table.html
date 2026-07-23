@@ -8,6 +8,7 @@
 		<tr>
 			<th>Nom</th>
 			<th>Devices</th>
+			<th>Violation</th>
 			<th></th>
 		</tr>
 		</thead>
@@ -25,7 +26,11 @@
 					</button>
 				</form>
 			</td>
-			<td th:text="${#lists.size(zone.deviceIds())}"></td>
+			<td th:text="${zone.deviceCount()}"></td>
+			<td>
+				<span class="chip small" th:classappend="${zone.violation()} ? 'error' : 'surface-variant'"
+					  th:text="${zone.violation()} ? 'Violation' : 'OK'"></span>
+			</td>
 			<td>
 				<button class="small circle transparent"
 						th:hx-delete="@{/zones/{id}(id=${zone.id()})}"
@@ -36,7 +41,7 @@
 			</td>
 		</tr>
 		<tr th:if="${#lists.isEmpty(zones)}">
-			<td colspan="3">Aucune zone enregistrée.</td>
+			<td colspan="4">Aucune zone enregistrée.</td>
 		</tr>
 		</tbody>
 	</table>

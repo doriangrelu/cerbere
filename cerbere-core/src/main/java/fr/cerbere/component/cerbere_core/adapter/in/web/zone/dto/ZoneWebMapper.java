@@ -15,6 +15,6 @@ import org.mapstruct.Mapping;
 public interface ZoneWebMapper {
 
 	@Mapping(target = "id", source = "id", qualifiedByName = "uuidToString")
-	@Mapping(target = "deviceIds", source = "deviceIds", qualifiedByName = "uuidSetToStringList")
+	@Mapping(target = "violation", source = "violation")
 	ZoneResponse toResponse(Zone zone);
 }

@@ -23,7 +23,15 @@
 						<input type="text" name="label" class="upper" th:value="${device.label()}" maxlength="120" required>
 						<label>Libellé</label>
 					</div>
-					<input type="hidden" name="zoneId" th:value="${device.zoneId()}">
+					<div class="field label border small round suffix">
+						<select name="zoneId">
+							<option value="">— Aucune zone —</option>
+							<option class="upper" th:each="zone : ${zones}" th:value="${zone.id()}"
+									th:text="${zone.name()}" th:selected="${zone.id() == device.zoneId()}"></option>
+						</select>
+						<label>Zone</label>
+						<i>arrow_drop_down</i>
+					</div>
 					<input type="hidden" name="enabled" th:value="${device.enabled()}">
 					<button class="small circle transparent" type="submit">
 						<i>save</i>

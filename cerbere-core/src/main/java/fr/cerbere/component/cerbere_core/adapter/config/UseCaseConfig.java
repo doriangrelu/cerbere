@@ -14,12 +14,15 @@ import fr.cerbere.component.cerbere_core.domain.port.in.alarm.ArmSystemUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.DisarmSystemUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.GetAlarmStatusUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.HandleDeviceEventUseCase;
+import fr.cerbere.component.cerbere_core.domain.port.in.alarm.ReevaluateAlarmTriggerUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.DeleteDeviceUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.ListDevicesUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.RegisterDeviceUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.UpdateDeviceUseCase;
+import fr.cerbere.component.cerbere_core.application.usecase.zone.RecomputeZoneViolationService;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.DeleteZoneUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.ListZonesUseCase;
+import fr.cerbere.component.cerbere_core.domain.port.in.zone.RecomputeZoneViolationUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.RegisterZoneUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.UpdateZoneUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmStateChangedPublisher;
@@ -45,13 +48,16 @@ public final class UseCaseConfig {
     }
 
     @Bean
-    public UpdateDeviceUseCase updateDeviceUseCase(final DeviceRepository deviceRepository, final DevicePublisher devicePublisher) {
-        return new UpdateDeviceService(deviceRepository, devicePublisher);
+    public UpdateDeviceUseCase updateDeviceUseCase(final DeviceRepository deviceRepository, final DevicePublisher devicePublisher,
+                                                   final RecomputeZoneViolationUseCase recomputeZoneViolationUseCase,
+                                                   final ReevaluateAlarmTriggerUseCase reevaluateAlarmTriggerUseCase) {
+        return new UpdateDeviceService(deviceRepository, devicePublisher, recomputeZoneViolationUseCase, reevaluateAlarmTriggerUseCase);
     }
 
     @Bean
-    public DeleteDeviceUseCase deleteDeviceUseCase(final DeviceRepository deviceRepository, final DevicePublisher devicePublisher) {
-        return new DeleteDeviceService(deviceRepository, devicePublisher);
+    public DeleteDeviceUseCase deleteDeviceUseCase(final DeviceRepository deviceRepository, final DevicePublisher devicePublisher,
+                                                   final RecomputeZoneViolationUseCase recomputeZoneViolationUseCase) {
+        return new DeleteDeviceService(deviceRepository, devicePublisher, recomputeZoneViolationUseCase);
     }
 
     @Bean
@@ -70,13 +76,18 @@ public final class UseCaseConfig {
     }
 
     @Bean
-    public DeleteZoneUseCase deleteZoneUseCase(final ZoneRepository zoneRepository) {
-        return new DeleteZoneService(zoneRepository);
+    public DeleteZoneUseCase deleteZoneUseCase(final ZoneRepository zoneRepository, final DeviceRepository deviceRepository) {
+        return new DeleteZoneService(zoneRepository, deviceRepository);
     }
 
     @Bean
     public ListZonesUseCase listZonesUseCase(final ZoneRepository zoneRepository) {
         return new ListZonesService(zoneRepository);
+    }
+
+    @Bean
+    public RecomputeZoneViolationUseCase recomputeZoneViolationUseCase(final ZoneRepository zoneRepository, final DeviceRepository deviceRepository) {
+        return new RecomputeZoneViolationService(zoneRepository, deviceRepository);
     }
 
     @Bean
@@ -102,10 +113,16 @@ public final class UseCaseConfig {
     }
 
     @Bean
+    public ReevaluateAlarmTriggerUseCase reevaluateAlarmTriggerUseCase(final AlarmSystemService alarmSystemService) {
+        return alarmSystemService;
+    }
+
+    @Bean
     public HandleDeviceEventUseCase handleDeviceEventUseCase(final AlarmSystemRepository alarmSystemRepository,
                                                              final DeviceRepository deviceRepository,
                                                              final AlarmStateChangedPublisher alarmStateChangedPublisher,
-                                                             final AlertPublisher alertPublisher) {
-        return new HandleDeviceEventService(alarmSystemRepository, deviceRepository, alarmStateChangedPublisher, alertPublisher);
+                                                             final AlertPublisher alertPublisher,
+                                                             final RecomputeZoneViolationUseCase recomputeZoneViolationUseCase) {
+        return new HandleDeviceEventService(alarmSystemRepository, deviceRepository, alarmStateChangedPublisher, alertPublisher, recomputeZoneViolationUseCase);
     }
 }
