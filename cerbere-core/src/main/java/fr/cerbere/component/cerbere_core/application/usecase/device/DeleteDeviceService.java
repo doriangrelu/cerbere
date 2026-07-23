@@ -1,9 +1,9 @@
 package fr.cerbere.component.cerbere_core.application.usecase.device;
 
+import fr.cerbere.component.cerbere_core.application.service.RecomputeZoneViolationService;
 import fr.cerbere.component.cerbere_core.domain.event.DeviceDeleted;
 import fr.cerbere.component.cerbere_core.domain.model.Device;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.DeleteDeviceUseCase;
-import fr.cerbere.component.cerbere_core.domain.port.in.zone.RecomputeZoneViolationUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DevicePublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,13 +22,13 @@ public final class DeleteDeviceService implements DeleteDeviceUseCase {
 
 	private final DeviceRepository deviceRepository;
 	private final DevicePublisher publisher;
-	private final RecomputeZoneViolationUseCase recomputeZoneViolationUseCase;
+	private final RecomputeZoneViolationService recomputeZoneViolationService;
 
 	@Override
 	public void delete(final UUID id) {
 		final UUID zoneId = this.deviceRepository.findById(id).map(Device::getZoneId).orElse(null);
 		this.deviceRepository.deleteById(id);
 		this.publisher.publish(new DeviceDeleted(id, Instant.now(), UUID.randomUUID()));
-		this.recomputeZoneViolationUseCase.recompute(zoneId);
+		this.recomputeZoneViolationService.recompute(zoneId);
 	}
 }

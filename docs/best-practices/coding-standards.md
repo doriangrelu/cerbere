@@ -47,7 +47,8 @@ Tout champ alimenté par une saisie utilisateur libre (`label` d'un device, `nam
   | Rôle | Suffixe | Exemple |
   |---|---|---|
   | Interface de port d'entrée (use-case exposé) | `UseCase` | `TriggerDeviceEventUseCase` |
-  | Implémentation d'un ou plusieurs `UseCase` | `Service` | `RegisterSimulatedDeviceService` |
+  | Implémentation d'un ou plusieurs `UseCase` (package `application.usecase`) | `Service` | `RegisterSimulatedDeviceService` |
+  | Collaborateur interne à `application`, sans port d'entrée (package `application.service`) | `Service` | `RecomputeZoneViolationService` |
   | Port de sortie (persistance) | `Repository` | `SimulatedDeviceRepository` |
   | Port de sortie (publication d'événement) | `Publisher` | `DeviceEventPublisher` |
   | Document persisté (Mongo) | `Document` | `SimulatedDeviceDocument` |
@@ -67,6 +68,8 @@ Tout champ alimenté par une saisie utilisateur libre (`label` d'un device, `nam
   | Point d'entrée Spring Boot | `Application` | `CerbereDevicesMockApplication` |
 
   Les entités du domaine avec identité (ex : `SimulatedDevice`) et les value objects/enums métier (ex : `DeviceType`, `ContactState`) restent nommés par leur concept métier, sans suffixe technique — ce sont les classes que ce tableau sert justement à distinguer du reste.
+
+  Le suffixe `Service` seul ne dit pas si une classe est un vrai use-case exposé : c'est le **package** qui tranche (`application.usecase` vs `application.service`, voir ADR 0018) — un `Service` sous `application.usecase` implémente toujours au moins une interface `port/in/*UseCase` ; un `Service` sous `application.service` n'en implémente aucune, n'est jamais appelé par un adapter, et n'a donc pas d'interface `UseCase` correspondante.
 - Packages : toujours en minuscules, `snake_case` uniquement pour le nom du module dans le package racine (`fr.cerbere.component.cerbere_devices_mock`), le reste des sous-packages en minuscules simples (`domain`, `usecase`, `mongo`...).
 - Pas d'abréviations obscures (`repo` toléré, `mgr`/`svc`/`impl` à éviter comme suffixe systématique).
 

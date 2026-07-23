@@ -1,5 +1,7 @@
 package fr.cerbere.component.cerbere_core.adapter.config;
 
+import fr.cerbere.component.cerbere_core.application.service.AlarmTriggerReevaluationService;
+import fr.cerbere.component.cerbere_core.application.service.RecomputeZoneViolationService;
 import fr.cerbere.component.cerbere_core.application.usecase.alarm.AlarmSystemService;
 import fr.cerbere.component.cerbere_core.application.usecase.alarm.HandleDeviceEventService;
 import fr.cerbere.component.cerbere_core.application.usecase.device.DeleteDeviceService;
@@ -14,15 +16,12 @@ import fr.cerbere.component.cerbere_core.domain.port.in.alarm.ArmSystemUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.DisarmSystemUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.GetAlarmStatusUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.HandleDeviceEventUseCase;
-import fr.cerbere.component.cerbere_core.domain.port.in.alarm.ReevaluateAlarmTriggerUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.DeleteDeviceUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.ListDevicesUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.RegisterDeviceUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.UpdateDeviceUseCase;
-import fr.cerbere.component.cerbere_core.application.usecase.zone.RecomputeZoneViolationService;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.DeleteZoneUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.ListZonesUseCase;
-import fr.cerbere.component.cerbere_core.domain.port.in.zone.RecomputeZoneViolationUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.RegisterZoneUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.UpdateZoneUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmStateChangedPublisher;
@@ -35,9 +34,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Câblage des use-cases (couche application) contre leurs ports. Les classes de
- * {@code application.usecase} restent volontairement dépourvues d'annotations Spring
- * (voir ADR 0001) : leur instanciation et leur exposition en tant que bean se font ici.
+ * Câblage des use-cases (couche application) contre leurs ports d'entrée. Les
+ * classes de {@code application.usecase} restent volontairement dépourvues
+ * d'annotations Spring (voir ADR 0001) : leur instanciation et leur exposition
+ * en tant que bean se font ici. Les collaborateurs internes de
+ * {@code application.service} (n'implémentant aucun port d'entrée) sont câblés
+ * séparément dans {@link ApplicationServiceConfig} — voir ADR 0018.
  */
 @Configuration(proxyBeanMethods = false)
 public final class UseCaseConfig {
@@ -49,15 +51,15 @@ public final class UseCaseConfig {
 
     @Bean
     public UpdateDeviceUseCase updateDeviceUseCase(final DeviceRepository deviceRepository, final DevicePublisher devicePublisher,
-                                                   final RecomputeZoneViolationUseCase recomputeZoneViolationUseCase,
-                                                   final ReevaluateAlarmTriggerUseCase reevaluateAlarmTriggerUseCase) {
-        return new UpdateDeviceService(deviceRepository, devicePublisher, recomputeZoneViolationUseCase, reevaluateAlarmTriggerUseCase);
+                                                   final RecomputeZoneViolationService recomputeZoneViolationService,
+                                                   final AlarmTriggerReevaluationService alarmTriggerReevaluationService) {
+        return new UpdateDeviceService(deviceRepository, devicePublisher, recomputeZoneViolationService, alarmTriggerReevaluationService);
     }
 
     @Bean
     public DeleteDeviceUseCase deleteDeviceUseCase(final DeviceRepository deviceRepository, final DevicePublisher devicePublisher,
-                                                   final RecomputeZoneViolationUseCase recomputeZoneViolationUseCase) {
-        return new DeleteDeviceService(deviceRepository, devicePublisher, recomputeZoneViolationUseCase);
+                                                   final RecomputeZoneViolationService recomputeZoneViolationService) {
+        return new DeleteDeviceService(deviceRepository, devicePublisher, recomputeZoneViolationService);
     }
 
     @Bean
@@ -86,15 +88,10 @@ public final class UseCaseConfig {
     }
 
     @Bean
-    public RecomputeZoneViolationUseCase recomputeZoneViolationUseCase(final ZoneRepository zoneRepository, final DeviceRepository deviceRepository) {
-        return new RecomputeZoneViolationService(zoneRepository, deviceRepository);
-    }
-
-    @Bean
     public AlarmSystemService alarmSystemService(final AlarmSystemRepository alarmSystemRepository,
                                                  final AlarmStateChangedPublisher alarmStateChangedPublisher,
-                                                 final DeviceRepository deviceRepository) {
-        return new AlarmSystemService(deviceRepository, alarmSystemRepository, alarmStateChangedPublisher);
+                                                 final AlarmTriggerReevaluationService alarmTriggerReevaluationService) {
+        return new AlarmSystemService(alarmSystemRepository, alarmStateChangedPublisher, alarmTriggerReevaluationService);
     }
 
     @Bean
@@ -113,16 +110,11 @@ public final class UseCaseConfig {
     }
 
     @Bean
-    public ReevaluateAlarmTriggerUseCase reevaluateAlarmTriggerUseCase(final AlarmSystemService alarmSystemService) {
-        return alarmSystemService;
-    }
-
-    @Bean
     public HandleDeviceEventUseCase handleDeviceEventUseCase(final AlarmSystemRepository alarmSystemRepository,
                                                              final DeviceRepository deviceRepository,
                                                              final AlarmStateChangedPublisher alarmStateChangedPublisher,
                                                              final AlertPublisher alertPublisher,
-                                                             final RecomputeZoneViolationUseCase recomputeZoneViolationUseCase) {
-        return new HandleDeviceEventService(alarmSystemRepository, deviceRepository, alarmStateChangedPublisher, alertPublisher, recomputeZoneViolationUseCase);
+                                                             final RecomputeZoneViolationService recomputeZoneViolationService) {
+        return new HandleDeviceEventService(alarmSystemRepository, deviceRepository, alarmStateChangedPublisher, alertPublisher, recomputeZoneViolationService);
     }
 }
