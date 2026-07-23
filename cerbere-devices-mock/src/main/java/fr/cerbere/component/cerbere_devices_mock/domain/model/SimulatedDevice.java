@@ -55,6 +55,14 @@ public final class SimulatedDevice {
         return new SimulatedDevice(this.id, this.type, this.label, this.zoneId, this.autoSimulate, newState);
     }
 
+    /**
+     * Retourne une nouvelle instance du device avec le libellé/zone donnés,
+     * suite à une modification côté registre officiel (voir ADR 0016).
+     */
+    public SimulatedDevice withLabelAndZone(final String newLabel, final UUID newZoneId) {
+        return new SimulatedDevice(this.id, this.type, newLabel, newZoneId, this.autoSimulate, this.currentState);
+    }
+
     public UUID getId() {
         return this.id;
     }

@@ -45,13 +45,13 @@ public final class UseCaseConfig {
     }
 
     @Bean
-    public UpdateDeviceUseCase updateDeviceUseCase(final DeviceRepository deviceRepository) {
-        return new UpdateDeviceService(deviceRepository);
+    public UpdateDeviceUseCase updateDeviceUseCase(final DeviceRepository deviceRepository, final DevicePublisher devicePublisher) {
+        return new UpdateDeviceService(deviceRepository, devicePublisher);
     }
 
     @Bean
-    public DeleteDeviceUseCase deleteDeviceUseCase(final DeviceRepository deviceRepository) {
-        return new DeleteDeviceService(deviceRepository);
+    public DeleteDeviceUseCase deleteDeviceUseCase(final DeviceRepository deviceRepository, final DevicePublisher devicePublisher) {
+        return new DeleteDeviceService(deviceRepository, devicePublisher);
     }
 
     @Bean

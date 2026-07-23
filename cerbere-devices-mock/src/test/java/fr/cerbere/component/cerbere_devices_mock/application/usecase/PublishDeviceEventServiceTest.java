@@ -97,6 +97,11 @@ class PublishDeviceEventServiceTest {
         public List<SimulatedDevice> findByAutoSimulateTrue() {
             return this.devices.values().stream().filter(SimulatedDevice::isAutoSimulate).toList();
         }
+
+        @Override
+        public void deleteById(final UUID id) {
+            this.devices.remove(id);
+        }
     }
 
     private static final class RecordingDeviceEventPublisher implements DeviceEventPublisher {

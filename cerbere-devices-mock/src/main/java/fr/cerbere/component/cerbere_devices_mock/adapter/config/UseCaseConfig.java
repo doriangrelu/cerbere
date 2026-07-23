@@ -1,12 +1,16 @@
 package fr.cerbere.component.cerbere_devices_mock.adapter.config;
 
+import fr.cerbere.component.cerbere_devices_mock.application.usecase.DeleteSimulatedDeviceService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.ListSimulatedDevicesService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.PublishDeviceEventService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.RegisterSimulatedDeviceService;
+import fr.cerbere.component.cerbere_devices_mock.application.usecase.UpdateSimulatedDeviceService;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.in.DeleteSimulatedDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.ListSimulatedDevicesUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RegisterSimulatedDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.SimulateDeviceEventUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.TriggerDeviceEventUseCase;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.in.UpdateSimulatedDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.out.DeviceEventPublisher;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.out.SimulatedDeviceRepository;
 import org.springframework.context.annotation.Bean;
@@ -44,5 +48,15 @@ public final class UseCaseConfig {
 	@Bean
 	public ListSimulatedDevicesUseCase listSimulatedDevicesUseCase(final SimulatedDeviceRepository simulatedDeviceRepository) {
 		return new ListSimulatedDevicesService(simulatedDeviceRepository);
+	}
+
+	@Bean
+	public UpdateSimulatedDeviceUseCase updateSimulatedDeviceUseCase(final SimulatedDeviceRepository simulatedDeviceRepository) {
+		return new UpdateSimulatedDeviceService(simulatedDeviceRepository);
+	}
+
+	@Bean
+	public DeleteSimulatedDeviceUseCase deleteSimulatedDeviceUseCase(final SimulatedDeviceRepository simulatedDeviceRepository) {
+		return new DeleteSimulatedDeviceService(simulatedDeviceRepository);
 	}
 }

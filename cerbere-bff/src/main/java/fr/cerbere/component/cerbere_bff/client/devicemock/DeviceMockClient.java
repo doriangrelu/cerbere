@@ -1,7 +1,6 @@
 package fr.cerbere.component.cerbere_bff.client.devicemock;
 
 import fr.cerbere.shared.dto.devicemock.DeviceEventResponse;
-import fr.cerbere.shared.dto.devicemock.RegisterSimulatedDeviceRequest;
 import fr.cerbere.shared.dto.devicemock.SimulatedDeviceResponse;
 import fr.cerbere.shared.dto.devicemock.TriggerDeviceEventRequest;
 import lombok.RequiredArgsConstructor;
@@ -29,14 +28,6 @@ public final class DeviceMockClient {
 			.retrieve()
 			.body(new ParameterizedTypeReference<List<SimulatedDeviceResponse>>() {
 			});
-	}
-
-	public SimulatedDeviceResponse register(final RegisterSimulatedDeviceRequest request) {
-		return this.devicesMockRestClient.post()
-			.uri("/api/devices-mock")
-			.body(request)
-			.retrieve()
-			.body(SimulatedDeviceResponse.class);
 	}
 
 	public DeviceEventResponse triggerEvent(final String deviceId, final String state) {

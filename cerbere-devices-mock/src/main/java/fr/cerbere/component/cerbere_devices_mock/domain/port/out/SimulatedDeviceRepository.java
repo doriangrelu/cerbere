@@ -18,4 +18,6 @@ public interface SimulatedDeviceRepository {
 	List<SimulatedDevice> findAll();
 
 	List<SimulatedDevice> findByAutoSimulateTrue();
+
+	void deleteById(UUID id);
 }

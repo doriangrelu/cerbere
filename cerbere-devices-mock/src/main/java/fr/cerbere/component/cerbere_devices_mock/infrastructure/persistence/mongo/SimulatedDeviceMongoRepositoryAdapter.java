@@ -44,4 +44,9 @@ public class SimulatedDeviceMongoRepositoryAdapter implements SimulatedDeviceRep
 			.map(SimulatedDeviceMapper::toDomain)
 			.toList();
 	}
+
+	@Override
+	public void deleteById(final UUID id) {
+		this.mongoRepository.deleteById(id.toString());
+	}
 }
