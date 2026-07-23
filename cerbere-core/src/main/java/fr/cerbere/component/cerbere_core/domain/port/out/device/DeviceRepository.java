@@ -19,5 +19,7 @@ public interface DeviceRepository {
 
 	List<Device> findByZoneId(UUID zoneId);
 
+	Optional<Device> findByLabel(String label);
+
 	void deleteById(UUID id);
 }

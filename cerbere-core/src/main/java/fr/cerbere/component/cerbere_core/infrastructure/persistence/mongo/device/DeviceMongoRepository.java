@@ -3,6 +3,7 @@ package fr.cerbere.component.cerbere_core.infrastructure.persistence.mongo.devic
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository Spring Data, volontairement non public : seul {@link DeviceMongoRepositoryAdapter}
@@ -12,4 +13,6 @@ import java.util.List;
 interface DeviceMongoRepository extends MongoRepository<DeviceDocument, String> {
 
 	List<DeviceDocument> findByZoneId(String zoneId);
+
+	Optional<DeviceDocument> findByLabel(String label);
 }

@@ -1,5 +1,6 @@
 package fr.cerbere.component.cerbere_bff.adapter.in.web.zone;
 
+import fr.cerbere.component.cerbere_bff.adapter.support.ProblemDetailMessages;
 import fr.cerbere.component.cerbere_bff.client.zone.ZoneCoreClient;
 import fr.cerbere.shared.dto.zone.RegisterZoneRequest;
 import fr.cerbere.shared.dto.zone.UpdateZoneRequest;
@@ -30,6 +31,7 @@ public final class ZoneAdminController {
 	private static final String ZONE_TABLE_FRAGMENT = "fragments/zone-table :: zoneTable";
 
 	private final ZoneCoreClient zoneCoreClient;
+	private final ProblemDetailMessages problemDetailMessages;
 
 	@GetMapping("/zones")
 	public String list(final Model model) {
@@ -56,7 +58,7 @@ public final class ZoneAdminController {
 		try {
 			this.zoneCoreClient.delete(id);
 		} catch (final HttpClientErrorException.Conflict exception) {
-			model.addAttribute(ZONE_ERROR_ATTRIBUTE, exception.getResponseBodyAsString());
+			model.addAttribute(ZONE_ERROR_ATTRIBUTE, this.problemDetailMessages.extractDetail(exception));
 		}
 		model.addAttribute(ZONES_ATTRIBUTE, this.zoneCoreClient.listAll());
 		return ZONE_TABLE_FRAGMENT;

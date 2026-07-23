@@ -1,6 +1,7 @@
 package fr.cerbere.component.cerbere_core.application.usecase.device;
 
 import fr.cerbere.component.cerbere_core.domain.event.DeviceCreated;
+import fr.cerbere.component.cerbere_core.domain.exception.DuplicateDeviceLabelException;
 import fr.cerbere.component.cerbere_core.domain.model.Device;
 import fr.cerbere.component.cerbere_core.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.RegisterDeviceUseCase;
@@ -12,7 +13,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Implémentation du use-case d'enregistrement d'un device.
+ * Implémentation du use-case d'enregistrement d'un device. Publie {@link DeviceCreated}
+ * pour que {@code cerbere-devices-mock} crée son miroir — voir ADR 0016.
  */
 @RequiredArgsConstructor
 public class RegisterDeviceService implements RegisterDeviceUseCase {
@@ -22,6 +24,9 @@ public class RegisterDeviceService implements RegisterDeviceUseCase {
 
     @Override
     public Device register(final UUID id, final DeviceType type, final String label, final UUID zoneId) {
+        if (this.deviceRepository.findByLabel(label).isPresent()) {
+            throw new DuplicateDeviceLabelException(label);
+        }
         final Device device = Device.register(id, type, label, zoneId);
         final Device created = this.deviceRepository.save(device);
         final DeviceCreated deviceCreated = new DeviceCreated(

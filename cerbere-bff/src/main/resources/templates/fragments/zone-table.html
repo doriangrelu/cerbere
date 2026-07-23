@@ -3,7 +3,7 @@
 <body>
 <div th:fragment="zoneTable" id="zone-table">
 	<article class="error" th:if="${zoneError}" th:text="${zoneError}"></article>
-	<table class="border">
+	<table class="border striped">
 		<thead>
 		<tr>
 			<th>Nom</th>
@@ -16,7 +16,7 @@
 			<td>
 				<form class="row" th:hx-put="@{/zones/{id}(id=${zone.id()})}"
 					  hx-target="#zone-table" hx-swap="outerHTML">
-					<input type="text" name="name" th:value="${zone.name()}" required>
+					<input type="text" name="name" th:value="${zone.name()}" maxlength="120" required>
 					<button class="small circle transparent" type="submit">
 						<i>save</i>
 					</button>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head>
+	<title>Cerbère — Page introuvable</title>
+</head>
+<body>
+<main>
+	<article class="center-align large-padding">
+		<i class="extra">search_off</i>
+		<h4>Page introuvable</h4>
+		<p>Il n'y a rien à cette adresse<span th:if="${path}" th:text="' (' + ${path} + ')'"></span>.</p>
+		<div class="space"></div>
+		<a href="/alarm" class="button">
+			<i>home</i>
+			<span>Retour au tableau de bord</span>
+		</a>
+	</article>
+</main>
+</body>
+</html>

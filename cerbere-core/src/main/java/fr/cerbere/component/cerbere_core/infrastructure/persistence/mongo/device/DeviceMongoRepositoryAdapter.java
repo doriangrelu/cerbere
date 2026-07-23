@@ -45,6 +45,11 @@ public class DeviceMongoRepositoryAdapter implements DeviceRepository {
 	}
 
 	@Override
+	public Optional<Device> findByLabel(final String label) {
+		return this.mongoRepository.findByLabel(label).map(this.deviceMapper::toDomain);
+	}
+
+	@Override
 	public void deleteById(final UUID id) {
 		this.mongoRepository.deleteById(id.toString());
 	}

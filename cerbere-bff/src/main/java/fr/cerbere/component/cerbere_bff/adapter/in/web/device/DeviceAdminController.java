@@ -1,5 +1,6 @@
 package fr.cerbere.component.cerbere_bff.adapter.in.web.device;
 
+import fr.cerbere.component.cerbere_bff.adapter.support.ProblemDetailMessages;
 import fr.cerbere.component.cerbere_bff.client.device.DeviceCoreClient;
 import fr.cerbere.component.cerbere_bff.client.zone.ZoneCoreClient;
 import fr.cerbere.shared.dto.device.DeviceResponse;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 import java.util.Map;
@@ -22,11 +24,15 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Administration du registre officiel des devices (création, activation/désactivation,
- * suppression). L'id est généré ici (côté BFF) à la création : l'usager n'a jamais à
- * saisir ni à voir d'UUID brut. Le device créé est propagé à {@code cerbere-devices-mock}
- * via l'événement Kafka {@code device.created} publié par {@code cerbere-core} — voir ADR 0016.
- * Les actions htmx retournent uniquement le fragment concerné (swap), jamais la page entière.
+ * Administration du registre officiel des devices (création, renommage,
+ * activation/désactivation, suppression). L'id est généré ici (côté BFF) à la
+ * création : l'usager n'a jamais à saisir ni à voir d'UUID brut. Le device créé
+ * est propagé à {@code cerbere-devices-mock} via l'événement Kafka {@code device.created}
+ * publié par {@code cerbere-core} — voir ADR 0016. {@code cerbere-core} refuse un
+ * libellé déjà utilisé par un autre device (409, voir {@code DuplicateDeviceLabelException})
+ * — l'erreur est extraite du {@code ProblemDetail} renvoyé et affichée dans le
+ * fragment plutôt que de faire planter l'écran. Les actions htmx retournent
+ * uniquement le fragment concerné (swap), jamais la page entière.
  */
 @Controller
 @RequiredArgsConstructor
@@ -39,6 +45,7 @@ public final class DeviceAdminController {
 
 	private final DeviceCoreClient deviceCoreClient;
 	private final ZoneCoreClient zoneCoreClient;
+	private final ProblemDetailMessages problemDetailMessages;
 
 	@GetMapping("/devices")
 	public String list(final Model model) {
@@ -48,20 +55,34 @@ public final class DeviceAdminController {
 
 	@PostMapping("/devices")
 	public String register(@RequestParam final String type,
-							@RequestParam(required = false) final String label,
+							@RequestParam final String label,
 							@RequestParam(required = false) final String zoneId,
 							final Model model) {
-		if (type == null) {
-			model.addAttribute(DEVICE_ERROR_ATTRIBUTE, "Merci de séléctionner un type de device");
-			this.populateModel(model);
-			return DEVICE_SECTION_FRAGMENT;
-		}
 		if (zoneId != null && !zoneId.isBlank() && this.zoneCoreClient.listAll().stream().noneMatch(zone -> zone.id().equals(zoneId))) {
 			model.addAttribute(DEVICE_ERROR_ATTRIBUTE, "Zone sélectionnée introuvable.");
 			this.populateModel(model);
 			return DEVICE_SECTION_FRAGMENT;
 		}
-		this.deviceCoreClient.register(new RegisterDeviceRequest(UUID.randomUUID().toString(), type, label, this.blankToNull(zoneId)));
+		try {
+			this.deviceCoreClient.register(new RegisterDeviceRequest(UUID.randomUUID().toString(), type, label, this.blankToNull(zoneId)));
+		} catch (final HttpClientErrorException exception) {
+			model.addAttribute(DEVICE_ERROR_ATTRIBUTE, this.problemDetailMessages.extractDetail(exception));
+		}
+		this.populateModel(model);
+		return DEVICE_SECTION_FRAGMENT;
+	}
+
+	@PutMapping("/devices/{id}")
+	public String rename(@PathVariable final String id,
+						  @RequestParam final String label,
+						  @RequestParam(required = false) final String zoneId,
+						  @RequestParam final boolean enabled,
+						  final Model model) {
+		try {
+			this.deviceCoreClient.update(id, new UpdateDeviceRequest(label, this.blankToNull(zoneId), enabled));
+		} catch (final HttpClientErrorException exception) {
+			model.addAttribute(DEVICE_ERROR_ATTRIBUTE, this.problemDetailMessages.extractDetail(exception));
+		}
 		this.populateModel(model);
 		return DEVICE_SECTION_FRAGMENT;
 	}

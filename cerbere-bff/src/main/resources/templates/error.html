@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head>
+	<title>Cerbère — Erreur</title>
+</head>
+<body>
+<main>
+	<article class="center-align large-padding">
+		<i class="extra">warning</i>
+		<h4>Oups</h4>
+		<p th:text="${message != null and !#strings.isEmpty(message)} ? ${message} : ('Erreur ' + ${status} + '.')">
+			Une erreur est survenue.
+		</p>
+		<div class="space"></div>
+		<a href="/alarm" class="button">
+			<i>home</i>
+			<span>Retour au tableau de bord</span>
+		</a>
+	</article>
+</main>
+</body>
+</html>
