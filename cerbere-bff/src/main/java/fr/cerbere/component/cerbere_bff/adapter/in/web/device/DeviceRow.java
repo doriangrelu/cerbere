@@ -5,5 +5,5 @@ package fr.cerbere.component.cerbere_bff.adapter.in.web.device;
  * {@code DeviceResponse} avec le nom de la zone résolu côté BFF (le
  * template ne doit jamais afficher un UUID brut à l'usager).
  */
-public record DeviceRow(String id, String type, String label, String zoneId, String zoneName, boolean enabled) {
+public record DeviceRow(String id, String type, String label, String zoneId, String zoneName, boolean enabled, boolean violation) {
 }

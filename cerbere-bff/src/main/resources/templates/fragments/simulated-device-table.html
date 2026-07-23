@@ -17,8 +17,8 @@
 		<tbody>
 		<tr th:each="device : ${simulatedDevices}">
 			<td th:text="${device.type()}"></td>
-			<td th:text="${device.label()}"></td>
-			<td th:text="${device.zoneName() != null} ? ${device.zoneName()} : '—'"></td>
+			<td class="upper" th:text="${device.label()}"></td>
+			<td class="upper" th:text="${device.zoneName() != null} ? ${device.zoneName()} : '—'"></td>
 			<td th:text="${device.autoSimulate()} ? 'Oui' : 'Non'"></td>
 			<td th:text="${device.currentState()}"></td>
 			<td>

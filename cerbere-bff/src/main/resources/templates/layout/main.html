@@ -17,6 +17,45 @@
 	<body class="light">
 	<header th:replace="~{fragments/nav :: nav}"></header>
 	<main class="responsive" style="padding: 1rem 1.5rem;" th:replace="${content}"></main>
+
+	<div id="app-toast" class="snackbar"></div>
+	<script>
+		(function () {
+			function verbLabel(verb) {
+				switch ((verb || '').toLowerCase()) {
+					case 'post': return 'Créé avec succès.';
+					case 'put': return 'Modifié avec succès.';
+					case 'delete': return 'Supprimé avec succès.';
+					default: return 'Action effectuée avec succès.';
+				}
+			}
+			function errorDetail(xhr) {
+				try {
+					const body = JSON.parse(xhr.responseText);
+					if (body && body.detail) {
+						return body.detail;
+					}
+				} catch (ignored) {
+					/* corps non-JSON, on retombe sur le message générique */
+				}
+				return 'Une erreur est survenue.';
+			}
+			document.body.addEventListener('htmx:afterRequest', function (event) {
+				const toast = document.getElementById('app-toast');
+				if (!toast) {
+					return;
+				}
+				const detail = event.detail;
+				const successful = !!detail.successful;
+				toast.classList.remove('primary', 'error');
+				toast.classList.add(successful ? 'primary' : 'error');
+				toast.textContent = successful ? verbLabel(detail.requestConfig && detail.requestConfig.verb) : errorDetail(detail.xhr);
+				if (window.ui) {
+					window.ui('#app-toast');
+				}
+			});
+		})();
+	</script>
 	</body>
 	</html>
 </div>

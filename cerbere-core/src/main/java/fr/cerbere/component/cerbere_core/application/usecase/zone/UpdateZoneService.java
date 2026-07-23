@@ -1,5 +1,6 @@
 package fr.cerbere.component.cerbere_core.application.usecase.zone;
 
+import fr.cerbere.component.cerbere_core.domain.exception.DuplicateZoneNameException;
 import fr.cerbere.component.cerbere_core.domain.exception.ZoneNotFoundException;
 import fr.cerbere.component.cerbere_core.domain.model.Zone;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.UpdateZoneUseCase;
@@ -20,6 +21,11 @@ public final class UpdateZoneService implements UpdateZoneUseCase {
 	public Zone update(final UUID id, final String name) {
 		final Zone zone = this.zoneRepository.findById(id)
 			.orElseThrow(() -> new ZoneNotFoundException(id));
+		this.zoneRepository.findByName(name)
+			.filter(other -> !other.getId().equals(id))
+			.ifPresent(other -> {
+				throw new DuplicateZoneNameException(name);
+			});
 		return this.zoneRepository.save(zone.withName(name));
 	}
 }

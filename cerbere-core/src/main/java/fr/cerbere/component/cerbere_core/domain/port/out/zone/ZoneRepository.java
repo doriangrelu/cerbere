@@ -17,5 +17,7 @@ public interface ZoneRepository {
 
 	List<Zone> findAll();
 
+	Optional<Zone> findByName(String name);
+
 	void deleteById(UUID id);
 }

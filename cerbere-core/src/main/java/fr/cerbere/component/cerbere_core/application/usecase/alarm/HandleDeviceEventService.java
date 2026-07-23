@@ -43,7 +43,7 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
 
     @Override
     public void handle(final DeviceEventReport report) {
-        final Device device = this.deviceRepository.findById(report.deviceId()).orElse(null);
+        Device device = this.deviceRepository.findById(report.deviceId()).orElse(null);
         if (device == null) {
             LOGGER.info("Ignoring event for unknown device {} (not yet synced, or deleted since)", report.deviceId());
             return;
@@ -53,7 +53,7 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
                 .orElseGet(() -> AlarmSystem.initial(AlarmSystem.DEFAULT_SYSTEM_ID));
         final boolean isViolation = this.isViolation(alarmSystem.getMode(), report);
 
-        this.processDevice(isViolation, device);
+        device = this.processDevice(isViolation, device);
 
         if (alarmSystem.getMode() == AlarmMode.DISARMED) {
             return;
@@ -73,9 +73,9 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
         this.raiseAlert(device, report);
     }
 
-    private void processDevice(final boolean isViolation, final Device device) {
+    private Device processDevice(final boolean isViolation, final Device device) {
         final Device current = isViolation ? device.withViolation() : device.withoutViolation();
-        this.deviceRepository.save(current);
+        return this.deviceRepository.save(current);
     }
 
     private boolean isViolation(final AlarmMode mode, final DeviceEventReport report) {

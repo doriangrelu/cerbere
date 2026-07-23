@@ -3,6 +3,7 @@ package fr.cerbere.component.cerbere_core.adapter.in.web;
 import fr.cerbere.component.cerbere_core.domain.exception.AlarmNotArmedException;
 import fr.cerbere.component.cerbere_core.domain.exception.DeviceNotFoundException;
 import fr.cerbere.component.cerbere_core.domain.exception.DuplicateDeviceLabelException;
+import fr.cerbere.component.cerbere_core.domain.exception.DuplicateZoneNameException;
 import fr.cerbere.component.cerbere_core.domain.exception.ZoneNotEmptyException;
 import fr.cerbere.component.cerbere_core.domain.exception.ZoneNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -50,6 +51,13 @@ public final class CoreExceptionHandler {
 	public ProblemDetail handleDuplicateDeviceLabel(final DuplicateDeviceLabelException exception) {
 		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 		problemDetail.setTitle("Duplicate device label");
+		return problemDetail;
+	}
+
+	@ExceptionHandler(DuplicateZoneNameException.class)
+	public ProblemDetail handleDuplicateZoneName(final DuplicateZoneNameException exception) {
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+		problemDetail.setTitle("Duplicate zone name");
 		return problemDetail;
 	}
 }

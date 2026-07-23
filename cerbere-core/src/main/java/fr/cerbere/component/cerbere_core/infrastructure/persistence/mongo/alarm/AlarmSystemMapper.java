@@ -16,6 +16,6 @@ public interface AlarmSystemMapper {
 	AlarmSystemDocument toDocument(AlarmSystem alarmSystem);
 
 	default AlarmSystem toDomain(final AlarmSystemDocument document) {
-		return AlarmSystem.restore(document.id(), AlarmMode.valueOf(document.mode()), document.triggered());
+		return AlarmSystem.restore(document.id(), AlarmMode.valueOf(document.mode()), document.triggered(), document.version());
 	}
 }

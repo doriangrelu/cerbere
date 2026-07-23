@@ -33,6 +33,7 @@ public final class AlarmSystemService implements ArmSystemUseCase, DisarmSystemU
                 .arm(mode);
         final boolean shouldTriggered = this.deviceRepository.findAll()
                 .stream()
+                .filter(Device::isEnabled)
                 .anyMatch(Device::isViolation);
 
         if (shouldTriggered) {

@@ -119,7 +119,7 @@ public final class DeviceAdminController {
 
 	private DeviceRow toRow(final DeviceResponse device, final Map<String, String> zoneNamesById) {
 		final String zoneName = device.zoneId() == null ? null : zoneNamesById.getOrDefault(device.zoneId(), "Zone supprimée");
-		return new DeviceRow(device.id(), device.type(), device.label(), device.zoneId(), zoneName, device.enabled());
+		return new DeviceRow(device.id(), device.type(), device.label(), device.zoneId(), zoneName, device.enabled(), device.violation());
 	}
 
 	private String blankToNull(final String value) {

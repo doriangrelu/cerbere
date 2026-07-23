@@ -19,6 +19,7 @@ public interface DeviceMapper {
 
     @Mapping(target = "id", source = "id", qualifiedByName = "uuidToString")
     @Mapping(target = "zoneId", source = "zoneId", qualifiedByName = "uuidToString")
+    @Mapping(target = "violation", source = "violation")
     DeviceDocument toDocument(Device device);
 
     default Device toDomain(final DeviceDocument document) {
@@ -29,7 +30,8 @@ public interface DeviceMapper {
                 document.label(),
                 zoneId != null ? UUID.fromString(zoneId) : null,
                 document.violation(),
-                document.enabled()
+                document.enabled(),
+                document.version()
         );
     }
 }

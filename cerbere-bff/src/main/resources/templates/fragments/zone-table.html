@@ -16,7 +16,10 @@
 			<td>
 				<form class="row" th:hx-put="@{/zones/{id}(id=${zone.id()})}"
 					  hx-target="#zone-table" hx-swap="outerHTML">
-					<input type="text" name="name" th:value="${zone.name()}" maxlength="120" required>
+					<div class="field label border small round">
+						<input type="text" name="name" class="upper" th:value="${zone.name()}" maxlength="120" required>
+						<label>Nom</label>
+					</div>
 					<button class="small circle transparent" type="submit">
 						<i>save</i>
 					</button>

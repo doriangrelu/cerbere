@@ -38,6 +38,11 @@ public class ZoneMongoRepositoryAdapter implements ZoneRepository {
 	}
 
 	@Override
+	public Optional<Zone> findByName(final String name) {
+		return this.mongoRepository.findByName(name).map(this.zoneMapper::toDomain);
+	}
+
+	@Override
 	public void deleteById(final UUID id) {
 		this.mongoRepository.deleteById(id.toString());
 	}

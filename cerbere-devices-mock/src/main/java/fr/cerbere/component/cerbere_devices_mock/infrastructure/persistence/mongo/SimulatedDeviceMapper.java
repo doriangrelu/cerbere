@@ -23,7 +23,8 @@ final class SimulatedDeviceMapper {
 			device.getLabel(),
 			zoneId != null ? zoneId.toString() : null,
 			device.isAutoSimulate(),
-			state.name()
+			state.name(),
+			device.getVersion()
 		);
 	}
 
@@ -37,7 +38,8 @@ final class SimulatedDeviceMapper {
 			document.label(),
 			zoneId != null ? UUID.fromString(zoneId) : null,
 			document.autoSimulate(),
-			state
+			state,
+			document.version()
 		);
 	}
 }

@@ -1,5 +1,6 @@
 package fr.cerbere.component.cerbere_core.application.usecase.zone;
 
+import fr.cerbere.component.cerbere_core.domain.exception.DuplicateZoneNameException;
 import fr.cerbere.component.cerbere_core.domain.model.Zone;
 import fr.cerbere.component.cerbere_core.domain.port.in.zone.RegisterZoneUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.out.zone.ZoneRepository;
@@ -15,6 +16,9 @@ public final class RegisterZoneService implements RegisterZoneUseCase {
 
 	@Override
 	public Zone register(final String name) {
+		if (this.zoneRepository.findByName(name).isPresent()) {
+			throw new DuplicateZoneNameException(name);
+		}
 		final Zone zone = Zone.register(name);
 		return this.zoneRepository.save(zone);
 	}

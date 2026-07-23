@@ -26,6 +26,6 @@ public interface ZoneMapper {
 		final Set<UUID> deviceIds = document.deviceIds().stream()
 			.map(UUID::fromString)
 			.collect(Collectors.toSet());
-		return Zone.restore(UUID.fromString(document.id()), document.name(), deviceIds);
+		return Zone.restore(UUID.fromString(document.id()), document.name(), deviceIds, document.version());
 	}
 }

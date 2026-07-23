@@ -1,15 +1,18 @@
 package fr.cerbere.component.cerbere_core.infrastructure.persistence.mongo.alarm;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Représentation Mongo de l'agrégat {@code AlarmSystem}.
+ * Représentation Mongo de l'agrégat {@code AlarmSystem}. {@code version}
+ * (verrouillage optimiste Mongo) protège contre les écritures concurrentes.
  */
 @Document(collection = "alarm_system")
 public record AlarmSystemDocument(
 	@Id String id,
 	String mode,
-	boolean triggered
+	boolean triggered,
+	@Version Long version
 ) {
 }
