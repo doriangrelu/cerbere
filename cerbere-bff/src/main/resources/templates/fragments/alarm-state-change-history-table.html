@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="table" id="alarm-state-change-history-table">
+	<table class="border striped">
+		<thead>
+		<tr>
+			<th>Date</th>
+			<th>Transition</th>
+			<th>Déclenché</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:each="row : ${alarmStateChangeRows}">
+			<td th:text="${row.occurredAt()}"></td>
+			<td th:text="${row.previousMode()} + ' → ' + ${row.newMode()}"></td>
+			<td>
+				<span class="chip small" th:classappend="${row.triggered()} ? 'error' : 'surface-variant'"
+					  th:text="${row.triggered()} ? 'Déclenché' : 'Non'"></span>
+			</td>
+		</tr>
+		<tr th:if="${#lists.isEmpty(alarmStateChangeRows)}">
+			<td colspan="3">Aucun changement d'état.</td>
+		</tr>
+		</tbody>
+	</table>
+	<div class="row" style="justify-content: flex-end;">
+		<button class="small circle transparent" th:if="${alarmStateChangesPage gt 0}"
+				th:hx-get="@{/history/alarm-state-changes(page=${alarmStateChangesPage - 1})}"
+				hx-target="#alarm-state-change-history-table" hx-swap="outerHTML">
+			<i>chevron_left</i>
+		</button>
+		<span th:text="${(alarmStateChangesPage + 1)} + ' / ' + ${(alarmStateChangesTotalPages == 0 ? 1 : alarmStateChangesTotalPages)}"></span>
+		<button class="small circle transparent" th:if="${(alarmStateChangesPage + 1) lt alarmStateChangesTotalPages}"
+				th:hx-get="@{/history/alarm-state-changes(page=${alarmStateChangesPage + 1})}"
+				hx-target="#alarm-state-change-history-table" hx-swap="outerHTML">
+			<i>chevron_right</i>
+		</button>
+	</div>
+</div>
+</body>
+</html>

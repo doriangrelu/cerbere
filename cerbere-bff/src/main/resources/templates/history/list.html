@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head>
+	<title>Cerbère — Historique</title>
+</head>
+<body>
+<main>
+	<h4>Historique</h4>
+
+	<!-- flex:1 1 0 explicite : nav.tabs>a hérite de flex-shrink:0 (comportement Beer CSS pour un <nav>
+	     générique), donc les 3 onglets s'affichent chacun à 100% de large sans cette correction -->
+	<nav class="tabs">
+		<a data-ui="#history-alerts-page" class="active" style="flex: 1 1 0;">
+			<i>emergency</i>
+			<span>Alertes</span>
+		</a>
+		<a data-ui="#history-alarm-state-changes-page" style="flex: 1 1 0;">
+			<i>shield</i>
+			<span>Changements d'état</span>
+		</a>
+		<a data-ui="#history-device-events-page" style="flex: 1 1 0;">
+			<i>sensors</i>
+			<span>Événements de device</span>
+		</a>
+	</nav>
+
+	<div class="page active" id="history-alerts-page">
+		<article>
+			<div th:replace="~{fragments/alert-history-table :: table}"></div>
+		</article>
+	</div>
+
+	<div class="page" id="history-alarm-state-changes-page">
+		<article>
+			<div th:replace="~{fragments/alarm-state-change-history-table :: table}"></div>
+		</article>
+	</div>
+
+	<div class="page" id="history-device-events-page">
+		<article>
+			<div th:replace="~{fragments/device-event-history-table :: table}"></div>
+		</article>
+	</div>
+</main>
+</body>
+</html>

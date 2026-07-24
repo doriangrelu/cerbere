@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="table" id="alert-history-table">
+	<table class="border striped">
+		<thead>
+		<tr>
+			<th>Date</th>
+			<th>Device</th>
+			<th>Zone</th>
+			<th>Sévérité</th>
+			<th>Message</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:each="row : ${alertRows}">
+			<td th:text="${row.occurredAt()}"></td>
+			<td class="upper" th:text="${row.deviceLabel()}"></td>
+			<td class="upper" th:text="${row.zoneName()}"></td>
+			<td>
+				<span class="chip small"
+					  th:classappend="${row.severity() == 'CRITICAL'} ? 'error' : (${row.severity() == 'WARNING'} ? 'primary' : 'surface-variant')"
+					  th:text="${row.severity()}"></span>
+			</td>
+			<td th:text="${row.message()}"></td>
+		</tr>
+		<tr th:if="${#lists.isEmpty(alertRows)}">
+			<td colspan="5">Aucune alerte.</td>
+		</tr>
+		</tbody>
+	</table>
+	<div class="row" style="justify-content: flex-end;">
+		<button class="small circle transparent" th:if="${alertsPage gt 0}"
+				th:hx-get="@{/history/alerts(page=${alertsPage - 1})}"
+				hx-target="#alert-history-table" hx-swap="outerHTML">
+			<i>chevron_left</i>
+		</button>
+		<span th:text="${(alertsPage + 1)} + ' / ' + ${(alertsTotalPages == 0 ? 1 : alertsTotalPages)}"></span>
+		<button class="small circle transparent" th:if="${(alertsPage + 1) lt alertsTotalPages}"
+				th:hx-get="@{/history/alerts(page=${alertsPage + 1})}"
+				hx-target="#alert-history-table" hx-swap="outerHTML">
+			<i>chevron_right</i>
+		</button>
+	</div>
+</div>
+</body>
+</html>
