@@ -40,10 +40,126 @@ services:
       timeout: 10s
       retries: 5
 
+  cerbere-core:
+    image: cerbere-core:latest
+    pull_policy: never
+    container_name: cerbere-core
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_MONGODB_HOST: cerbere-mongodb
+      SPRING_KAFKA_BOOTSTRAPSERVERS: cerbere-kafka:9092
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  cerbere-history:
+    image: cerbere-history:latest
+    pull_policy: never
+    container_name: cerbere-history
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_MONGODB_HOST: cerbere-mongodb
+      SPRING_KAFKA_BOOTSTRAPSERVERS: cerbere-kafka:9092
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  cerbere-bff:
+    image: cerbere-bff:latest
+    pull_policy: never
+    container_name: cerbere-bff
+    ports:
+      - "8083:8083"
+    environment:
+      CERBERE_CORE_BASEURL: http://cerbere-core:8082
+      CERBERE_DEVICESMOCK_BASEURL: http://cerbere-devices-mock:8081
+      CERBERE_HISTORY_BASEURL: http://cerbere-history:8084
+    depends_on:
+      - cerbere-core
+      - cerbere-history
+
+  cerbere-devices-mock:
+    image: cerbere-devices-mock:latest
+    pull_policy: never
+    container_name: cerbere-devices-mock
+    profiles: ["mock"]
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_MONGODB_HOST: cerbere-mongodb
+      SPRING_KAFKA_BOOTSTRAPSERVERS: cerbere-kafka:9092
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: cerbere-mosquitto
+    profiles: ["hardware"]
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:latest
+    container_name: cerbere-zigbee2mqtt
+    profiles: ["hardware"]
+    ports:
+      - "8090:8080"
+    volumes:
+      - zigbee2mqtt_data:/app/data
+    environment:
+      ZIGBEE2MQTT_CONFIG_MQTT_SERVER: mqtt://cerbere-mosquitto:1883
+      # Chemin du dongle coordinateur côté hôte : à adapter selon la machine
+      # (voir docs/deployment/nuc-deployment.md — passthrough natif sous Debian,
+      # non trivial sous Windows).
+      ZIGBEE2MQTT_CONFIG_SERIAL_PORT: /dev/ttyUSB0
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    depends_on:
+      - mosquitto
+
+  cerbere-devices-bridge:
+    image: cerbere-devices-bridge:latest
+    pull_policy: never
+    container_name: cerbere-devices-bridge
+    profiles: ["hardware"]
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_MONGODB_HOST: cerbere-mongodb
+      SPRING_KAFKA_BOOTSTRAPSERVERS: cerbere-kafka:9092
+      CERBERE_DEVICESBRIDGE_MQTT_BROKERURL: tcp://cerbere-mosquitto:1883
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+
 volumes:
   mongodb_data:
+  mosquitto_data:
+  zigbee2mqtt_data:
 
-# Les 5 autres services applicatifs (api-gateway, cerbere-bff, cerbere-core,
-# cerbere-history, cerbere-notification) ainsi que cerbere-devices-mock
-# containerisé seront ajoutés à ce compose dans une itération ultérieure,
-# construits via Cloud Native Buildpacks (voir docs/adr/0008-strategie-images-cloud-native-buildpacks.md).
+# api-gateway et cerbere-notification restent des scaffolds vides (aucune valeur à
+# containeriser un service qui ne fait rien) : pas présents dans ce compose.
+# Images cerbere-* construites localement via Cloud Native Buildpacks
+# (./mvnw spring-boot:build-image, voir docs/adr/0008-strategie-images-cloud-native-buildpacks.md
+# et docs/deployment/nuc-deployment.md) — pull_policy: never pour ne jamais tenter de les
+# récupérer depuis un registre distant.
+# Profils : par défaut (aucun --profile) → mongodb/kafka/core/bff/history seuls.
+# --profile mock → ajoute cerbere-devices-mock (démo/dev sans matériel).
+# --profile hardware → ajoute cerbere-devices-bridge + mosquitto + zigbee2mqtt (matériel réel).
+# mock et hardware ne doivent jamais tourner ensemble (deux sources concurrentes d'événements device).
