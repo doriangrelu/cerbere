@@ -78,6 +78,11 @@ Tout champ alimenté par une saisie utilisateur libre (`label` d'un device, `nam
 - Le module `cerbere-shared-kernel` (`fr.cerbere.shared`) **porte tout DTO consommé par plus d'un module** — voir [ADR 0010](../adr/0010-module-contract-partage-autorise.md)/[ADR 0013](../adr/0013-module-cerbere-shared-kernel.md). Règle sans exception : ça vaut pour les enveloppes/événements Kafka comme pour les DTOs REST (request/response) échangés entre deux services Cerbère (ex : `cerbere-bff` qui appelle `cerbere-core`). **Ne jamais dupliquer une copie locale d'un DTO déjà consommé ailleurs** — sous-package `fr.cerbere.shared.dto.<agrégat>` pour les DTOs REST (ex : `fr.cerbere.shared.dto.alarm.AlarmStatusResponse`), à distinguer de `fr.cerbere.shared.event` (enveloppes Kafka).
 - Règle d'extraction : ne pas créer un DTO partagé par anticipation. Chaque service porte son propre DTO tant qu'il est seul à le produire/consommer ; l'extraction vers `cerbere-shared-kernel` intervient dès qu'un **second** module a réellement besoin du même contrat (producteur+consommateur, ou deux consommateurs).
 
+## Pagination des listes REST
+
+- Un endpoint qui liste une ressource **non bornée dans le temps** (ex : un historique, un journal d'événements) expose `Page<XxxResponse>` (`org.springframework.data.domain.Page`/`Pageable`, résolu automatiquement par Spring MVC) plutôt qu'un `List<XxxResponse>` simple — voir `cerbere-history`. Une ressource dont le volume reste naturellement petit et borné (ex : `Device`/`Zone`, quelques dizaines d'entrées dans une maison individuelle) reste en `List<XxxResponse>` non paginée : pas de pagination par anticipation.
+- `Pageable`/`Page` restent des types `adapter` (Spring), jamais `domain`/`application` (voir ADR 0001 : `domain` n'importe aucun framework). Le `domain`/`application` définit son propre couple `PageRequest`/`PageResult<T>` (records simples, sans dépendance framework) ; le contrôleur REST fait la traduction dans les deux sens à la frontière.
+
 ## Documentation du code
 
 - **JavaDoc obligatoire** sur toutes les classes et méthodes publiques des packages `domain` (modèle + ports) — c'est le contrat métier, il doit être lisible sans lire l'implémentation.

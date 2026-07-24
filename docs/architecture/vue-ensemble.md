@@ -44,11 +44,11 @@ Document vivant, à tenir à jour à chaque itération (voir règle de mise à j
 
 | Service | Statut | Rôle |
 |---|---|---|
-| `cerbere-devices-mock` | **Implémenté (cette itération)** | Simule contact porte/fenêtre, mouvement, sirène. Publie `cerbere.device.events.raw`. |
-| `cerbere-core` | À venir | Registre devices/zones, état alarme, arm/disarm, évaluation des alertes |
-| `cerbere-history` | À venir | Persistance et consultation de l'historique des événements |
+| `cerbere-devices-mock` | **Implémenté** | Simule contact porte/fenêtre, mouvement, sirène. Publie `cerbere.device.events.raw`, consomme `cerbere.device.state`. |
+| `cerbere-core` | **Implémenté** | Registre devices/zones, état alarme, arm/disarm, évaluation des alertes |
+| `cerbere-history` | **Implémenté (cette itération)** | Persistance et consultation paginée de l'historique des événements (device events, changements d'état alarme, alertes) |
 | `cerbere-notification` | À venir | Envoi d'alertes (email + push) |
-| `cerbere-bff` | À venir | Agrégation REST pour les deux futures interfaces |
+| `cerbere-bff` | **Implémenté** | Agrégation REST (alarme, devices, zones, mode test) — pas encore d'écran historique |
 | `api-gateway` | À venir | Routage public/admin, sécurité |
 
 ## Principes de communication
