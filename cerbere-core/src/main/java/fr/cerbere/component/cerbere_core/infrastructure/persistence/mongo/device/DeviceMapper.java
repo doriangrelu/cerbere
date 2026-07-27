@@ -31,6 +31,7 @@ public interface DeviceMapper {
                 zoneId != null ? UUID.fromString(zoneId) : null,
                 document.violation(),
                 document.enabled(),
+                document.lastSeenAt(),
                 document.version()
         );
     }

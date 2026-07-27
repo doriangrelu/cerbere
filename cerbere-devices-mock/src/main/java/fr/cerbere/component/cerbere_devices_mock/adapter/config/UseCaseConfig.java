@@ -1,10 +1,12 @@
 package fr.cerbere.component.cerbere_devices_mock.adapter.config;
 
+import fr.cerbere.component.cerbere_devices_mock.application.usecase.BindSimulatedDeviceService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.DeleteSimulatedDeviceService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.ListSimulatedDevicesService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.PublishDeviceEventService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.RegisterSimulatedDeviceService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.UpdateSimulatedDeviceService;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.in.BindSimulatedDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.DeleteSimulatedDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.ListSimulatedDevicesUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RegisterSimulatedDeviceUseCase;
@@ -58,5 +60,10 @@ public final class UseCaseConfig {
 	@Bean
 	public DeleteSimulatedDeviceUseCase deleteSimulatedDeviceUseCase(final SimulatedDeviceRepository simulatedDeviceRepository) {
 		return new DeleteSimulatedDeviceService(simulatedDeviceRepository);
+	}
+
+	@Bean
+	public BindSimulatedDeviceUseCase bindSimulatedDeviceUseCase(final SimulatedDeviceRepository simulatedDeviceRepository) {
+		return new BindSimulatedDeviceService(simulatedDeviceRepository);
 	}
 }

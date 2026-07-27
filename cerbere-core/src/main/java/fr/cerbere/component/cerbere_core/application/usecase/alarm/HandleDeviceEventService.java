@@ -55,7 +55,7 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
                 .orElseGet(() -> AlarmSystem.initial(AlarmSystem.DEFAULT_SYSTEM_ID));
         final boolean isViolation = this.isViolation(alarmSystem.getMode(), report);
 
-        device = this.processDevice(isViolation, device);
+        device = this.processDevice(isViolation, device, report.occurredAt());
 
         if (alarmSystem.getMode() == AlarmMode.DISARMED) {
             return;
@@ -75,8 +75,9 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
         this.raiseAlert(device, report);
     }
 
-    private Device processDevice(final boolean isViolation, final Device device) {
-        final Device current = isViolation ? device.withViolation() : device.withoutViolation();
+    private Device processDevice(final boolean isViolation, final Device device, final Instant occurredAt) {
+        final Device withState = isViolation ? device.withViolation() : device.withoutViolation();
+        final Device current = withState.withLastSeenAt(occurredAt);
         final Device saved = this.deviceRepository.save(current);
         this.recomputeZoneViolationService.recompute(saved.getZoneId());
         return saved;

@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,6 +45,8 @@ public final class DeviceAdminController {
 	private static final String ZONES_ATTRIBUTE = "zones";
 	private static final String DEVICE_ERROR_ATTRIBUTE = "deviceError";
 	private static final String DEVICE_SECTION_FRAGMENT = "fragments/device-table :: deviceSection";
+	private static final DateTimeFormatter LAST_SEEN_AT_FORMATTER =
+		DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").withZone(ZoneId.systemDefault());
 
 	private final DeviceCoreClient deviceCoreClient;
 	private final ZoneCoreClient zoneCoreClient;
@@ -124,7 +129,8 @@ public final class DeviceAdminController {
 
 	private DeviceRow toRow(final DeviceResponse device, final Map<String, String> zoneNamesById) {
 		final String zoneName = device.zoneId() == null ? null : zoneNamesById.getOrDefault(device.zoneId(), "Zone supprimée");
-		return new DeviceRow(device.id(), device.type(), device.label(), device.zoneId(), zoneName, device.enabled(), device.violation());
+		final String lastSeenAt = device.lastSeenAt() == null ? "—" : LAST_SEEN_AT_FORMATTER.format(device.lastSeenAt());
+		return new DeviceRow(device.id(), device.type(), device.label(), device.zoneId(), zoneName, device.enabled(), device.violation(), lastSeenAt);
 	}
 
 	private String blankToNull(final String value) {

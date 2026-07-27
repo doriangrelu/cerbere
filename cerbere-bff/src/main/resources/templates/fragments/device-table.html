@@ -11,6 +11,7 @@
 			<th>Zone</th>
 			<th>Statut</th>
 			<th>Violation</th>
+			<th>Dernière activité</th>
 			<th></th>
 		</tr>
 		</thead>
@@ -48,6 +49,7 @@
 				<span class="chip small" th:classappend="${device.violation()} ? 'error' : 'surface-variant'"
 					  th:text="${device.violation()} ? 'Violation' : 'OK'"></span>
 			</td>
+			<td th:text="${device.lastSeenAt()}"></td>
 			<td>
 				<div class="row">
 					<button class="small circle transparent"
@@ -66,7 +68,7 @@
 			</td>
 		</tr>
 		<tr th:if="${#lists.isEmpty(devices)}">
-			<td colspan="6">Aucun device enregistré.</td>
+			<td colspan="7">Aucun device enregistré.</td>
 		</tr>
 		</tbody>
 	</table>

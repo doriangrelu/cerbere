@@ -9,9 +9,10 @@
 			<th>Type</th>
 			<th>Libellé</th>
 			<th>Zone</th>
+			<th>Liaison</th>
 			<th>Auto</th>
 			<th>État courant</th>
-			<th>Déclencher</th>
+			<th>Déclencher / Lier</th>
 		</tr>
 		</thead>
 		<tbody>
@@ -19,10 +20,14 @@
 			<td th:text="${device.type()}"></td>
 			<td class="upper" th:text="${device.label()}"></td>
 			<td class="upper" th:text="${device.zoneName() != null} ? ${device.zoneName()} : '—'"></td>
+			<td>
+				<span class="chip small" th:classappend="${device.bound()} ? 'primary' : 'surface-variant'"
+					  th:text="${device.bound()} ? 'Lié' : 'Orphelin'"></span>
+			</td>
 			<td th:text="${device.autoSimulate()} ? 'Oui' : 'Non'"></td>
 			<td th:text="${device.currentState()}"></td>
 			<td>
-				<form class="row" th:hx-post="@{/test-mode/devices/{id}/events(id=${device.id()})}"
+				<form th:if="${device.bound()}" class="row" th:hx-post="@{/test-mode/devices/{id}/events(id=${device.id()})}"
 					  hx-target="#simulated-device-table" hx-swap="outerHTML">
 					<div class="field label border small round suffix" th:if="${device.type() == 'CONTACT'}">
 						<select name="state">
@@ -52,13 +57,59 @@
 						<i>bolt</i>
 					</button>
 				</form>
+				<form th:unless="${device.bound()}" class="row" th:hx-post="@{/test-mode/devices/{id}/bind(id=${device.id()})}"
+					  hx-target="#simulated-device-table" hx-swap="outerHTML">
+					<div class="field label border small round suffix">
+						<select name="coreDeviceId" required>
+							<option th:each="target : ${unboundDevices}" th:value="${target.id()}"
+									class="upper" th:text="${target.label()} + ' (' + ${target.type()} + ')'"></option>
+						</select>
+						<label>Lier à</label>
+						<i>arrow_drop_down</i>
+					</div>
+					<button class="small circle transparent" type="submit" th:disabled="${#lists.isEmpty(unboundDevices)}">
+						<i>link</i>
+					</button>
+				</form>
 			</td>
 		</tr>
 		<tr th:if="${#lists.isEmpty(simulatedDevices)}">
-			<td colspan="6">Aucun device simulé.</td>
+			<td colspan="7">Aucun device simulé.</td>
 		</tr>
 		</tbody>
 	</table>
+
+	<div class="space"></div>
+
+	<article>
+		<h6>Créer un device brut (orphelin)</h6>
+		<p>Simule un device physique fraîchement appairé, avant liaison à un device du registre officiel.</p>
+		<form hx-post="/test-mode/devices" hx-target="#simulated-device-table" hx-swap="outerHTML">
+			<div class="field label border suffix">
+				<select name="type" required>
+					<option value="CONTACT">CONTACT</option>
+					<option value="MOTION">MOTION</option>
+					<option value="SIREN">SIREN</option>
+				</select>
+				<label>Type</label>
+				<i>arrow_drop_down</i>
+			</div>
+
+			<div class="space"></div>
+
+			<div class="field label border">
+				<input type="text" name="label" class="upper" maxlength="120" required>
+				<label>Libellé</label>
+			</div>
+
+			<div class="space"></div>
+
+			<button type="submit">
+				<i>add</i>
+				<span>Créer</span>
+			</button>
+		</form>
+	</article>
 </div>
 </body>
 </html>

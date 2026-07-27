@@ -2,6 +2,7 @@ package fr.cerbere.component.cerbere_devices_mock.adapter.in.web;
 
 import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.in.BindSimulatedDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.ListSimulatedDevicesUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RegisterSimulatedDeviceUseCase;
 import fr.cerbere.shared.config.CommonJacksonConfig;
@@ -43,6 +44,9 @@ class SimulatedDeviceControllerTest {
 
     @MockitoBean
     private ListSimulatedDevicesUseCase listSimulatedDevicesUseCase;
+
+    @MockitoBean
+    private BindSimulatedDeviceUseCase bindSimulatedDeviceUseCase;
 
     @Test
     void listAllShouldReturnRegisteredDevices() throws Exception {

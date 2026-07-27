@@ -1,5 +1,6 @@
 package fr.cerbere.component.cerbere_devices_mock.adapter.in.web;
 
+import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceAlreadyBoundException;
 import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceNotFoundException;
 import fr.cerbere.component.cerbere_devices_mock.domain.exception.UnsupportedDeviceCommandException;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,13 @@ public final class DevicesMockExceptionHandler {
 	public ProblemDetail handleUnsupportedCommand(final UnsupportedDeviceCommandException exception) {
 		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
 		problemDetail.setTitle("Unsupported device command");
+		return problemDetail;
+	}
+
+	@ExceptionHandler(DeviceAlreadyBoundException.class)
+	public ProblemDetail handleDeviceAlreadyBound(final DeviceAlreadyBoundException exception) {
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+		problemDetail.setTitle("Device already bound");
 		return problemDetail;
 	}
 }

@@ -45,7 +45,10 @@ public final class UpdateDeviceService implements UpdateDeviceUseCase {
 			});
 		final UUID previousZoneId = device.getZoneId();
 		final boolean wasEnabled = device.isEnabled();
-		final Device updated = device.withLabel(label).withZoneId(zoneId).withEnabled(enabled);
+		Device updated = device.withLabel(label).withZoneId(zoneId).withEnabled(enabled);
+		if (!wasEnabled && enabled) {
+			updated = updated.withLastSeenAt(Instant.now());
+		}
 		final Device saved = this.deviceRepository.save(updated);
 		this.publisher.publish(new DeviceUpdated(saved.getId(), saved.getLabel(), saved.getZoneId(), Instant.now(), UUID.randomUUID()));
 		this.recomputeZoneViolationService.recompute(previousZoneId);

@@ -4,6 +4,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
+
 /**
  * Représentation Mongo d'un {@code Device} du registre officiel. {@code version}
  * (verrouillage optimiste Mongo) protège contre les écritures concurrentes.
@@ -16,6 +18,7 @@ public record DeviceDocument(
         String zoneId,
         boolean violation,
         boolean enabled,
+        Instant lastSeenAt,
         @Version Long version
 ) {
 }

@@ -4,6 +4,7 @@ import fr.cerbere.component.cerbere_core.application.service.AlarmTriggerReevalu
 import fr.cerbere.component.cerbere_core.application.service.RecomputeZoneViolationService;
 import fr.cerbere.component.cerbere_core.application.usecase.alarm.AlarmSystemService;
 import fr.cerbere.component.cerbere_core.application.usecase.alarm.HandleDeviceEventService;
+import fr.cerbere.component.cerbere_core.application.usecase.device.CheckDeviceHeartbeatsService;
 import fr.cerbere.component.cerbere_core.application.usecase.device.DeleteDeviceService;
 import fr.cerbere.component.cerbere_core.application.usecase.device.ListDevicesService;
 import fr.cerbere.component.cerbere_core.application.usecase.device.RegisterDeviceService;
@@ -16,6 +17,7 @@ import fr.cerbere.component.cerbere_core.domain.port.in.alarm.ArmSystemUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.DisarmSystemUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.GetAlarmStatusUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.HandleDeviceEventUseCase;
+import fr.cerbere.component.cerbere_core.domain.port.in.device.CheckDeviceHeartbeatsUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.DeleteDeviceUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.ListDevicesUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.RegisterDeviceUseCase;
@@ -30,8 +32,11 @@ import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlertPublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DevicePublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceRepository;
 import fr.cerbere.component.cerbere_core.domain.port.out.zone.ZoneRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Duration;
 
 /**
  * Câblage des use-cases (couche application) contre leurs ports d'entrée. Les
@@ -116,5 +121,15 @@ public final class UseCaseConfig {
                                                              final AlertPublisher alertPublisher,
                                                              final RecomputeZoneViolationService recomputeZoneViolationService) {
         return new HandleDeviceEventService(alarmSystemRepository, deviceRepository, alarmStateChangedPublisher, alertPublisher, recomputeZoneViolationService);
+    }
+
+    @Bean
+    public CheckDeviceHeartbeatsUseCase checkDeviceHeartbeatsUseCase(final DeviceRepository deviceRepository,
+                                                                     final RecomputeZoneViolationService recomputeZoneViolationService,
+                                                                     final AlarmTriggerReevaluationService alarmTriggerReevaluationService,
+                                                                     final AlertPublisher alertPublisher,
+                                                                     @Value("${cerbere.core.device-heartbeat.timeout-ms}") final long timeoutMs) {
+        return new CheckDeviceHeartbeatsService(deviceRepository, recomputeZoneViolationService, alarmTriggerReevaluationService,
+                alertPublisher, Duration.ofMillis(timeoutMs));
     }
 }
