@@ -8,16 +8,16 @@ import java.util.UUID;
 
 /**
  * Événement de domaine émis lorsqu'un device simulé change d'état, que ce soit
- * via le scheduler automatique ou l'API de déclenchement manuel.
+ * via le scheduler automatique ou l'API de déclenchement manuel. Publié sur
+ * MQTT (voir ADR 0021), plus sur Kafka — pas de {@code zoneId}/{@code correlationId}
+ * (concepts propres à l'enveloppe Kafka, sans objet ici).
  */
 public record DeviceEventOccurred(
 	UUID eventId,
 	UUID deviceId,
-	UUID zoneId,
 	DeviceType deviceType,
 	DeviceState newState,
 	Instant occurredAt,
-	UUID correlationId,
 	boolean triggeredManually
 ) {
 }

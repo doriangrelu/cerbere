@@ -15,6 +15,8 @@ public interface SimulatedDeviceRepository {
 
 	Optional<SimulatedDevice> findById(UUID id);
 
+	Optional<SimulatedDevice> findByFriendlyName(String friendlyName);
+
 	List<SimulatedDevice> findAll();
 
 	List<SimulatedDevice> findByAutoSimulateTrue();

@@ -16,7 +16,7 @@ public final class SimulatedDeviceWebMapper {
 			device.getId().toString(),
 			device.getType().name(),
 			device.getLabel(),
-			device.getZoneId() != null ? device.getZoneId().toString() : null,
+			device.getFriendlyName(),
 			device.isAutoSimulate(),
 			device.getCurrentState().name()
 		);

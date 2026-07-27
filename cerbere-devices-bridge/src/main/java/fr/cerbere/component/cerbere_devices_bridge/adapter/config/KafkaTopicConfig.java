@@ -1,6 +1,6 @@
-package fr.cerbere.component.cerbere_devices_mock.adapter.config;
+package fr.cerbere.component.cerbere_devices_bridge.adapter.config;
 
-import fr.cerbere.component.cerbere_devices_mock.infrastructure.messaging.kafka.producer.DeviceEventKafkaProducer;
+import fr.cerbere.component.cerbere_devices_bridge.infrastructure.messaging.kafka.producer.DeviceEventKafkaProducer;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.config.TopicConfig;
 import org.springframework.context.annotation.Bean;
@@ -10,10 +10,12 @@ import org.springframework.kafka.config.TopicBuilder;
 import java.time.Duration;
 
 /**
- * Provisionnement explicite du topic {@code cerbere.device.events.raw}, plutôt
- * que de dépendre de l'auto-création Kafka (qui appliquerait les valeurs par
- * défaut du broker en partitions/rétention). Voir
- * docs/best-practices/kafka-conventions.md pour la convention de dimensionnement.
+ * Provisionnement explicite du topic {@code cerbere.device.events.raw}. Le
+ * bridge en est désormais le seul producteur réel (voir ADR 0021 :
+ * {@code cerbere-devices-mock} publie sur MQTT, plus directement sur Kafka),
+ * donc son propriétaire — auparavant {@code cerbere-devices-mock}
+ * (voir ADR 0014). Voir docs/best-practices/kafka-conventions.md pour la
+ * convention de dimensionnement.
  */
 @Configuration(proxyBeanMethods = false)
 public final class KafkaTopicConfig {

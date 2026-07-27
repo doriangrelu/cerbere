@@ -3,11 +3,11 @@ package fr.cerbere.component.cerbere_devices_mock.adapter.in.web;
 import fr.cerbere.component.cerbere_devices_mock.adapter.in.web.dto.SimulatedDeviceWebMapper;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.in.BindSimulatedDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.ListSimulatedDevicesUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RegisterSimulatedDeviceUseCase;
-import fr.cerbere.shared.dto.devicemock.BindSimulatedDeviceRequest;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RenameSimulatedDeviceUseCase;
 import fr.cerbere.shared.dto.devicemock.RegisterOrphanSimulatedDeviceRequest;
+import fr.cerbere.shared.dto.devicemock.RenameSimulatedDeviceRequest;
 import fr.cerbere.shared.dto.devicemock.SimulatedDeviceResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,8 @@ import java.util.UUID;
 
 /**
  * API REST de gestion des devices simulés (CRUD minimal : créer un device
- * orphelin, lister, lier à un device du registre officiel — voir ADR 0020).
+ * orphelin, lister, renommer son {@code friendlyName} MQTT — action d'appairage,
+ * voir ADR 0021).
  */
 @RestController
 @RequestMapping("/api/devices-mock")
@@ -34,7 +35,7 @@ public final class SimulatedDeviceController {
 
     private final ListSimulatedDevicesUseCase listSimulatedDevicesUseCase;
     private final RegisterSimulatedDeviceUseCase registerSimulatedDeviceUseCase;
-    private final BindSimulatedDeviceUseCase bindSimulatedDeviceUseCase;
+    private final RenameSimulatedDeviceUseCase renameSimulatedDeviceUseCase;
 
     @GetMapping
     public List<SimulatedDeviceResponse> listAll() {
@@ -47,17 +48,14 @@ public final class SimulatedDeviceController {
     @ResponseStatus(HttpStatus.CREATED)
     public SimulatedDeviceResponse registerOrphan(@Valid @RequestBody final RegisterOrphanSimulatedDeviceRequest request) {
         final SimulatedDevice device = this.registerSimulatedDeviceUseCase.register(
-                UUID.randomUUID(), DeviceType.valueOf(request.type()), request.label(), null, false
+                DeviceType.valueOf(request.type()), request.label(), false
         );
         return SimulatedDeviceWebMapper.toResponse(device);
     }
 
-    @PostMapping("/{orphanId}/bind")
-    public SimulatedDeviceResponse bind(@PathVariable final UUID orphanId, @Valid @RequestBody final BindSimulatedDeviceRequest request) {
-        final UUID zoneId = request.zoneId() != null ? UUID.fromString(request.zoneId()) : null;
-        final SimulatedDevice device = this.bindSimulatedDeviceUseCase.bind(
-                orphanId, UUID.fromString(request.coreDeviceId()), request.label(), zoneId
-        );
+    @PostMapping("/{id}/rename")
+    public SimulatedDeviceResponse rename(@PathVariable final UUID id, @Valid @RequestBody final RenameSimulatedDeviceRequest request) {
+        final SimulatedDevice device = this.renameSimulatedDeviceUseCase.rename(id, request.friendlyName());
         return SimulatedDeviceWebMapper.toResponse(device);
     }
 

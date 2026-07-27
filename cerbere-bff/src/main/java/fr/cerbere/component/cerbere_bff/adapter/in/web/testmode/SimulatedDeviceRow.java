@@ -2,11 +2,12 @@ package fr.cerbere.component.cerbere_bff.adapter.in.web.testmode;
 
 /**
  * Modèle de présentation d'une ligne du tableau Mode test : agrège
- * {@code SimulatedDeviceResponse} avec le nom de la zone résolu côté BFF (le
- * template ne doit jamais afficher un UUID brut à l'usager). {@code bound}
- * indique si ce device simulé correspond déjà à un device du registre officiel
- * (id partagé) — voir ADR 0020. Un device orphelin ({@code !bound}) peut être
- * lié à un device officiel non encore lié depuis ce même écran.
+ * {@code SimulatedDeviceResponse} (le template ne doit jamais afficher un UUID
+ * brut à l'usager, {@code friendlyName} n'est donc jamais exposé une fois
+ * apparié). {@code bound} indique si le {@code friendlyName} MQTT de ce device
+ * simulé correspond déjà à un device du registre officiel — voir ADR 0021. Un
+ * device orphelin ({@code !bound}) peut être apparié (renommage de son
+ * {@code friendlyName}) à un device officiel non encore apparié depuis ce même écran.
  */
-public record SimulatedDeviceRow(String id, String type, String label, String zoneName, boolean autoSimulate, String currentState, boolean bound) {
+public record SimulatedDeviceRow(String id, String type, String label, boolean autoSimulate, String currentState, boolean bound) {
 }

@@ -8,18 +8,16 @@
 		<tr>
 			<th>Type</th>
 			<th>Libellé</th>
-			<th>Zone</th>
-			<th>Liaison</th>
+			<th>Appairage</th>
 			<th>Auto</th>
 			<th>État courant</th>
-			<th>Déclencher / Lier</th>
+			<th>Déclencher / Apparier</th>
 		</tr>
 		</thead>
 		<tbody>
 		<tr th:each="device : ${simulatedDevices}">
 			<td th:text="${device.type()}"></td>
 			<td class="upper" th:text="${device.label()}"></td>
-			<td class="upper" th:text="${device.zoneName() != null} ? ${device.zoneName()} : '—'"></td>
 			<td>
 				<span class="chip small" th:classappend="${device.bound()} ? 'primary' : 'surface-variant'"
 					  th:text="${device.bound()} ? 'Lié' : 'Orphelin'"></span>
@@ -57,14 +55,14 @@
 						<i>bolt</i>
 					</button>
 				</form>
-				<form th:unless="${device.bound()}" class="row" th:hx-post="@{/test-mode/devices/{id}/bind(id=${device.id()})}"
+				<form th:unless="${device.bound()}" class="row" th:hx-post="@{/test-mode/devices/{id}/rename(id=${device.id()})}"
 					  hx-target="#simulated-device-table" hx-swap="outerHTML">
 					<div class="field label border small round suffix">
 						<select name="coreDeviceId" required>
 							<option th:each="target : ${unboundDevices}" th:value="${target.id()}"
 									class="upper" th:text="${target.label()} + ' (' + ${target.type()} + ')'"></option>
 						</select>
-						<label>Lier à</label>
+						<label>Apparier à</label>
 						<i>arrow_drop_down</i>
 					</div>
 					<button class="small circle transparent" type="submit" th:disabled="${#lists.isEmpty(unboundDevices)}">
@@ -74,7 +72,7 @@
 			</td>
 		</tr>
 		<tr th:if="${#lists.isEmpty(simulatedDevices)}">
-			<td colspan="7">Aucun device simulé.</td>
+			<td colspan="6">Aucun device simulé.</td>
 		</tr>
 		</tbody>
 	</table>
@@ -83,7 +81,7 @@
 
 	<article>
 		<h6>Créer un device brut (orphelin)</h6>
-		<p>Simule un device physique fraîchement appairé, avant liaison à un device du registre officiel.</p>
+		<p>Simule un device Zigbee2MQTT fraîchement appairé (parle MQTT comme du matériel réel), avant appairage à un device du registre officiel.</p>
 		<form hx-post="/test-mode/devices" hx-target="#simulated-device-table" hx-swap="outerHTML">
 			<div class="field label border suffix">
 				<select name="type" required>

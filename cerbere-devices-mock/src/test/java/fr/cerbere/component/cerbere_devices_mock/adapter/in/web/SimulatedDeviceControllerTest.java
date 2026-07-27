@@ -2,9 +2,9 @@ package fr.cerbere.component.cerbere_devices_mock.adapter.in.web;
 
 import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.in.BindSimulatedDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.ListSimulatedDevicesUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RegisterSimulatedDeviceUseCase;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RenameSimulatedDeviceUseCase;
 import fr.cerbere.shared.config.CommonJacksonConfig;
 import fr.cerbere.shared.config.PermitAllSecurityConfig;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Test de la tranche web du contrôleur de gestion des devices simulés,
- * use-cases mockés (aucune dépendance Mongo/Kafka).
+ * use-cases mockés (aucune dépendance Mongo/MQTT).
  */
 @WebMvcTest(SimulatedDeviceController.class)
 @Import({PermitAllSecurityConfig.class, CommonJacksonConfig.class})
@@ -46,11 +46,11 @@ class SimulatedDeviceControllerTest {
     private ListSimulatedDevicesUseCase listSimulatedDevicesUseCase;
 
     @MockitoBean
-    private BindSimulatedDeviceUseCase bindSimulatedDeviceUseCase;
+    private RenameSimulatedDeviceUseCase renameSimulatedDeviceUseCase;
 
     @Test
     void listAllShouldReturnRegisteredDevices() throws Exception {
-        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.MOTION, "Salon", null, true);
+        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.MOTION, "Salon", true);
         given(this.listSimulatedDevicesUseCase.listAll()).willReturn(List.of(device));
 
         this.mockMvc.perform(get("/api/devices-mock"))

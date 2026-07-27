@@ -16,12 +16,11 @@ final class SimulatedDeviceMapper {
 
 	static SimulatedDeviceDocument toDocument(final SimulatedDevice device) {
 		final DeviceState state = device.getCurrentState();
-		final UUID zoneId = device.getZoneId();
 		return new SimulatedDeviceDocument(
 			device.getId().toString(),
 			device.getType().name(),
 			device.getLabel(),
-			zoneId != null ? zoneId.toString() : null,
+			device.getFriendlyName(),
 			device.isAutoSimulate(),
 			state.name(),
 			device.getVersion()
@@ -31,12 +30,11 @@ final class SimulatedDeviceMapper {
 	static SimulatedDevice toDomain(final SimulatedDeviceDocument document) {
 		final DeviceType type = DeviceType.valueOf(document.type());
 		final DeviceState state = type.parseState(document.state());
-		final String zoneId = document.zoneId();
 		return SimulatedDevice.restore(
 			UUID.fromString(document.id()),
 			type,
 			document.label(),
-			zoneId != null ? UUID.fromString(zoneId) : null,
+			document.friendlyName(),
 			document.autoSimulate(),
 			state,
 			document.version()

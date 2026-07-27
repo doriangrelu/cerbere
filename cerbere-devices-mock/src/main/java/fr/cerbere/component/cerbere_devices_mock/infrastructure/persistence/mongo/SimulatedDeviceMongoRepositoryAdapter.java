@@ -32,6 +32,11 @@ public class SimulatedDeviceMongoRepositoryAdapter implements SimulatedDeviceRep
 	}
 
 	@Override
+	public Optional<SimulatedDevice> findByFriendlyName(final String friendlyName) {
+		return this.mongoRepository.findByFriendlyName(friendlyName).map(SimulatedDeviceMapper::toDomain);
+	}
+
+	@Override
 	public List<SimulatedDevice> findAll() {
 		return this.mongoRepository.findAll().stream()
 			.map(SimulatedDeviceMapper::toDomain)

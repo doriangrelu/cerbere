@@ -11,8 +11,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class SimulatedDeviceTest {
 
     @Test
+    void registerShouldDefaultFriendlyNameToId() {
+        final UUID id = UUID.randomUUID();
+
+        final SimulatedDevice device = SimulatedDevice.register(id, DeviceType.CONTACT, "Fenêtre cuisine", false);
+
+        assertThat(device.getFriendlyName()).isEqualTo(id.toString());
+    }
+
+    @Test
     void withStateShouldReturnNewInstanceWithoutMutatingOriginal() {
-        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine", null, false);
+        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine", false);
 
         final SimulatedDevice updated = device.withState(ContactState.OPEN);
 
@@ -23,9 +32,20 @@ class SimulatedDeviceTest {
 
     @Test
     void withStateShouldRejectStateFromAnotherDeviceFamily() {
-        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine", null, false);
+        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine", false);
 
         assertThatThrownBy(() -> device.withState(SirenState.ACTIVE))
                 .isInstanceOf(UnsupportedDeviceCommandException.class);
+    }
+
+    @Test
+    void withFriendlyNameShouldReturnNewInstanceWithoutMutatingOriginal() {
+        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine", false);
+
+        final SimulatedDevice renamed = device.withFriendlyName("some-core-device-uuid");
+
+        assertThat(device.getFriendlyName()).isNotEqualTo("some-core-device-uuid");
+        assertThat(renamed.getFriendlyName()).isEqualTo("some-core-device-uuid");
+        assertThat(renamed.getId()).isEqualTo(device.getId());
     }
 }

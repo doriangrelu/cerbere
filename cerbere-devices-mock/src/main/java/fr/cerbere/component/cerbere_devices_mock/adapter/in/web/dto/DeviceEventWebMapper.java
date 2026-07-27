@@ -15,11 +15,9 @@ public final class DeviceEventWebMapper {
 		return new DeviceEventResponse(
 			event.eventId().toString(),
 			event.deviceId().toString(),
-			event.zoneId() != null ? event.zoneId().toString() : null,
 			event.deviceType().name(),
 			event.newState().name(),
 			event.occurredAt(),
-			event.correlationId().toString(),
 			event.triggeredManually()
 		);
 	}

@@ -9,9 +9,10 @@ import org.springframework.stereotype.Component;
 
 /**
  * Implémentation Kafka du port {@link DeviceEventPublisher}. Publie sur
- * {@code cerbere.device.events.raw} — topic déjà provisionné par
- * {@code cerbere-devices-mock} (ADR 0014), non redéclaré ici. Clé de
- * partition = {@code deviceId} (voir docs/best-practices/kafka-conventions.md).
+ * {@code cerbere.device.events.raw} — topic provisionné par ce module
+ * ({@code KafkaTopicConfig}, voir ADR 0021 : le bridge en est désormais le
+ * seul producteur réel). Clé de partition = {@code deviceId}
+ * (voir docs/best-practices/kafka-conventions.md).
  */
 @Component
 public final class DeviceEventKafkaProducer implements DeviceEventPublisher {

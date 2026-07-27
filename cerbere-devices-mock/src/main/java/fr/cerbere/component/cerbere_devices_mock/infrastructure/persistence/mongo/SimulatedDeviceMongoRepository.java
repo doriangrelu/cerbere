@@ -3,6 +3,7 @@ package fr.cerbere.component.cerbere_devices_mock.infrastructure.persistence.mon
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository Spring Data, volontairement non public : seul {@link SimulatedDeviceMongoRepositoryAdapter}
@@ -12,4 +13,6 @@ import java.util.List;
 public interface SimulatedDeviceMongoRepository extends MongoRepository<SimulatedDeviceDocument, String> {
 
 	List<SimulatedDeviceDocument> findByAutoSimulate(boolean autoSimulate);
+
+	Optional<SimulatedDeviceDocument> findByFriendlyName(String friendlyName);
 }

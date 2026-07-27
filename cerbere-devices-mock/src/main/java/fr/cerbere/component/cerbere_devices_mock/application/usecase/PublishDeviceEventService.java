@@ -1,12 +1,12 @@
 package fr.cerbere.component.cerbere_devices_mock.application.usecase;
 
 import fr.cerbere.component.cerbere_devices_mock.domain.event.DeviceEventOccurred;
+import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceNotFoundException;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceState;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.SimulateDeviceEventUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.TriggerDeviceEventUseCase;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.out.DeviceEventPublisher;
-import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceNotFoundException;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.out.DeviceStatePublisher;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.out.SimulatedDeviceRepository;
 
 import java.time.Instant;
@@ -15,7 +15,9 @@ import java.util.UUID;
 /**
  * Service central : que la source soit le scheduler de simulation automatique ou
  * l'API de déclenchement manuel, tout changement d'état d'un device simulé passe
- * par ce service, garantissant un format d'événement homogène (voir ADR 0004).
+ * par ce service, garantissant un format homogène (voir ADR 0004) — publié sur
+ * MQTT avec exactement les mêmes payloads qu'un vrai device Zigbee2MQTT, pour que
+ * {@code cerbere-devices-bridge} le traite sans distinction (voir ADR 0021).
  * Implémente les ports {@link TriggerDeviceEventUseCase} et
  * {@link SimulateDeviceEventUseCase} (suffixe {@code Service} réservé aux
  * implémentations, {@code UseCase} réservé aux interfaces de port — voir
@@ -24,12 +26,12 @@ import java.util.UUID;
 public final class PublishDeviceEventService implements TriggerDeviceEventUseCase, SimulateDeviceEventUseCase {
 
 	private final SimulatedDeviceRepository simulatedDeviceRepository;
-	private final DeviceEventPublisher deviceEventPublisher;
+	private final DeviceStatePublisher deviceStatePublisher;
 
 	public PublishDeviceEventService(final SimulatedDeviceRepository simulatedDeviceRepository,
-									  final DeviceEventPublisher deviceEventPublisher) {
+									  final DeviceStatePublisher deviceStatePublisher) {
 		this.simulatedDeviceRepository = simulatedDeviceRepository;
-		this.deviceEventPublisher = deviceEventPublisher;
+		this.deviceStatePublisher = deviceStatePublisher;
 	}
 
 	@Override
@@ -55,18 +57,15 @@ public final class PublishDeviceEventService implements TriggerDeviceEventUseCas
 		final SimulatedDevice updatedDevice = device.withState(newState);
 		this.simulatedDeviceRepository.save(updatedDevice);
 
-		final DeviceEventOccurred event = new DeviceEventOccurred(
+		this.deviceStatePublisher.publish(updatedDevice.getFriendlyName(), updatedDevice.getType(), newState);
+
+		return new DeviceEventOccurred(
 			UUID.randomUUID(),
 			updatedDevice.getId(),
-			updatedDevice.getZoneId(),
 			updatedDevice.getType(),
 			newState,
 			Instant.now(),
-			UUID.randomUUID(),
 			triggeredManually
 		);
-
-		this.deviceEventPublisher.publish(event);
-		return event;
 	}
 }

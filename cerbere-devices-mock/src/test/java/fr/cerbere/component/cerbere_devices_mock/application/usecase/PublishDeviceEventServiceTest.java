@@ -3,9 +3,10 @@ package fr.cerbere.component.cerbere_devices_mock.application.usecase;
 import fr.cerbere.component.cerbere_devices_mock.domain.event.DeviceEventOccurred;
 import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceNotFoundException;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.ContactState;
+import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceState;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.out.DeviceEventPublisher;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.out.DeviceStatePublisher;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.out.SimulatedDeviceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,25 +28,27 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class PublishDeviceEventServiceTest {
 
     private InMemorySimulatedDeviceRepository repository;
-    private RecordingDeviceEventPublisher publisher;
+    private RecordingDeviceStatePublisher publisher;
     private PublishDeviceEventService service;
 
     @BeforeEach
     void setUp() {
         this.repository = new InMemorySimulatedDeviceRepository();
-        this.publisher = new RecordingDeviceEventPublisher();
+        this.publisher = new RecordingDeviceStatePublisher();
         this.service = new PublishDeviceEventService(this.repository, this.publisher);
     }
 
     @Test
     void triggerShouldPublishRequestedStateAndPersistIt() {
-        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte d'entrée", null, false));
+        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte d'entrée", false));
 
         final DeviceEventOccurred event = this.service.trigger(device.getId(), ContactState.OPEN.name());
 
         assertThat(event.newState()).isEqualTo(ContactState.OPEN);
         assertThat(event.triggeredManually()).isTrue();
-        assertThat(this.publisher.publishedEvents()).containsExactly(event);
+        assertThat(this.publisher.publishedStates()).containsExactly(
+            new PublishedState(device.getFriendlyName(), DeviceType.CONTACT, ContactState.OPEN)
+        );
         assertThat(this.repository.findById(device.getId()).orElseThrow().getCurrentState()).isEqualTo(ContactState.OPEN);
     }
 
@@ -57,7 +60,7 @@ class PublishDeviceEventServiceTest {
 
     @Test
     void triggerShouldThrowWhenRequestedStateDoesNotBelongToDeviceType() {
-        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte d'entrée", null, false));
+        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte d'entrée", false));
 
         assertThatThrownBy(() -> this.service.trigger(device.getId(), "ACTIVE"))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -65,12 +68,15 @@ class PublishDeviceEventServiceTest {
 
     @Test
     void simulateRandomEventShouldMarkEventAsNotManual() {
-        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.MOTION, "Salon", null, true));
+        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.MOTION, "Salon", true));
 
         final DeviceEventOccurred event = this.service.simulateRandomEvent(device.getId());
 
         assertThat(event.triggeredManually()).isFalse();
-        assertThat(this.publisher.publishedEvents()).containsExactly(event);
+        assertThat(this.publisher.publishedStates()).hasSize(1);
+    }
+
+    private record PublishedState(String friendlyName, DeviceType type, DeviceState state) {
     }
 
     private static final class InMemorySimulatedDeviceRepository implements SimulatedDeviceRepository {
@@ -89,6 +95,11 @@ class PublishDeviceEventServiceTest {
         }
 
         @Override
+        public Optional<SimulatedDevice> findByFriendlyName(final String friendlyName) {
+            return this.devices.values().stream().filter(device -> device.getFriendlyName().equals(friendlyName)).findFirst();
+        }
+
+        @Override
         public List<SimulatedDevice> findAll() {
             return List.copyOf(this.devices.values());
         }
@@ -104,17 +115,17 @@ class PublishDeviceEventServiceTest {
         }
     }
 
-    private static final class RecordingDeviceEventPublisher implements DeviceEventPublisher {
+    private static final class RecordingDeviceStatePublisher implements DeviceStatePublisher {
 
-        private final List<DeviceEventOccurred> events = new ArrayList<>();
+        private final List<PublishedState> states = new ArrayList<>();
 
         @Override
-        public void publish(final DeviceEventOccurred event) {
-            this.events.add(event);
+        public void publish(final String friendlyName, final DeviceType type, final DeviceState state) {
+            this.states.add(new PublishedState(friendlyName, type, state));
         }
 
-        List<DeviceEventOccurred> publishedEvents() {
-            return this.events;
+        List<PublishedState> publishedStates() {
+            return this.states;
         }
     }
 }

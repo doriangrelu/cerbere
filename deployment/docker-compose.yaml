@@ -93,17 +93,17 @@ services:
       - "8081:8081"
     environment:
       SPRING_MONGODB_HOST: cerbere-mongodb
-      SPRING_KAFKA_BOOTSTRAPSERVERS: cerbere-kafka:9092
+      CERBERE_DEVICESMOCK_MQTT_BROKERURL: tcp://cerbere-mosquitto:1883
     depends_on:
       mongodb:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
+      mosquitto:
+        condition: service_started
 
   mosquitto:
     image: eclipse-mosquitto:latest
     container_name: cerbere-mosquitto
-    profiles: ["hardware"]
+    profiles: ["mock", "hardware"]
     ports:
       - "1883:1883"
     volumes:
@@ -133,7 +133,7 @@ services:
     image: cerbere-devices-bridge:latest
     pull_policy: never
     container_name: cerbere-devices-bridge
-    profiles: ["hardware"]
+    profiles: ["mock", "hardware"]
     ports:
       - "8085:8085"
     environment:
@@ -160,6 +160,9 @@ volumes:
 # et docs/deployment/nuc-deployment.md) — pull_policy: never pour ne jamais tenter de les
 # récupérer depuis un registre distant.
 # Profils : par défaut (aucun --profile) → mongodb/kafka/core/bff/history seuls.
-# --profile mock → ajoute cerbere-devices-mock (démo/dev sans matériel).
-# --profile hardware → ajoute cerbere-devices-bridge + mosquitto + zigbee2mqtt (matériel réel).
-# mock et hardware ne doivent jamais tourner ensemble (deux sources concurrentes d'événements device).
+# --profile mock → ajoute mosquitto + cerbere-devices-bridge + cerbere-devices-mock : le Mock se
+#   comporte comme un vrai device Zigbee2MQTT (voir ADR 0021), le Bridge le traite exactement
+#   comme du matériel réel — permet de tester le Bridge de bout en bout sans matériel physique.
+# --profile hardware → ajoute mosquitto + cerbere-devices-bridge + zigbee2mqtt (matériel réel).
+# mock et hardware ne doivent jamais tourner ensemble (deux sources concurrentes de messages MQTT
+# pour les mêmes topics zigbee2mqtt/+).

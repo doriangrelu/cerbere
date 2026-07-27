@@ -14,7 +14,7 @@ public record SimulatedDeviceDocument(
 	@Id String id,
 	String type,
 	String label,
-	String zoneId,
+	String friendlyName,
 	boolean autoSimulate,
 	String state,
 	@Version Long version

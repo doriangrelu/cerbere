@@ -1,19 +1,15 @@
 package fr.cerbere.component.cerbere_devices_mock.adapter.config;
 
-import fr.cerbere.component.cerbere_devices_mock.application.usecase.BindSimulatedDeviceService;
-import fr.cerbere.component.cerbere_devices_mock.application.usecase.DeleteSimulatedDeviceService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.ListSimulatedDevicesService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.PublishDeviceEventService;
 import fr.cerbere.component.cerbere_devices_mock.application.usecase.RegisterSimulatedDeviceService;
-import fr.cerbere.component.cerbere_devices_mock.application.usecase.UpdateSimulatedDeviceService;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.in.BindSimulatedDeviceUseCase;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.in.DeleteSimulatedDeviceUseCase;
+import fr.cerbere.component.cerbere_devices_mock.application.usecase.RenameSimulatedDeviceService;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.ListSimulatedDevicesUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RegisterSimulatedDeviceUseCase;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RenameSimulatedDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.SimulateDeviceEventUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.TriggerDeviceEventUseCase;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.in.UpdateSimulatedDeviceUseCase;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.out.DeviceEventPublisher;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.out.DeviceStatePublisher;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.out.SimulatedDeviceRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,8 +24,8 @@ public final class UseCaseConfig {
 
 	@Bean
 	public PublishDeviceEventService publishDeviceEventService(final SimulatedDeviceRepository simulatedDeviceRepository,
-																 final DeviceEventPublisher deviceEventPublisher) {
-		return new PublishDeviceEventService(simulatedDeviceRepository, deviceEventPublisher);
+																 final DeviceStatePublisher deviceStatePublisher) {
+		return new PublishDeviceEventService(simulatedDeviceRepository, deviceStatePublisher);
 	}
 
 	@Bean
@@ -53,17 +49,7 @@ public final class UseCaseConfig {
 	}
 
 	@Bean
-	public UpdateSimulatedDeviceUseCase updateSimulatedDeviceUseCase(final SimulatedDeviceRepository simulatedDeviceRepository) {
-		return new UpdateSimulatedDeviceService(simulatedDeviceRepository);
-	}
-
-	@Bean
-	public DeleteSimulatedDeviceUseCase deleteSimulatedDeviceUseCase(final SimulatedDeviceRepository simulatedDeviceRepository) {
-		return new DeleteSimulatedDeviceService(simulatedDeviceRepository);
-	}
-
-	@Bean
-	public BindSimulatedDeviceUseCase bindSimulatedDeviceUseCase(final SimulatedDeviceRepository simulatedDeviceRepository) {
-		return new BindSimulatedDeviceService(simulatedDeviceRepository);
+	public RenameSimulatedDeviceUseCase renameSimulatedDeviceUseCase(final SimulatedDeviceRepository simulatedDeviceRepository) {
+		return new RenameSimulatedDeviceService(simulatedDeviceRepository);
 	}
 }
