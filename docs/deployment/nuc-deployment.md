@@ -21,12 +21,12 @@ Document vivant : à mettre à jour dès que le NUC est effectivement provisionn
    ```
    Vérifier ensuite `docker images` : les 5 images `cerbere-*:latest` doivent apparaître (noms fixés explicitement dans chaque `pom.xml`, voir bloc `<image>` du `spring-boot-maven-plugin`).
 
-2. Démarrer :
-   - Démo/dev sans matériel réel : `docker compose --profile mock up -d` (depuis `deployment/`).
-   - Matériel réel : `docker compose --profile hardware up -d`.
-   - Les deux profils ne doivent **jamais** tourner simultanément : ce serait deux sources concurrentes d'événements device pour les mêmes topics Kafka.
+2. Démarrer (le profil `apps` — les 5 modules en conteneur — se combine toujours avec `mock` ou `hardware`, qui pilotent la source de matériel Zigbee) :
+   - Démo/dev sans matériel réel : `docker compose --profile apps --profile mock up -d` (depuis `deployment/`).
+   - Matériel réel : `docker compose --profile apps --profile hardware up -d`.
+   - `mock` et `hardware` ne doivent **jamais** tourner simultanément : ce serait deux sources concurrentes d'événements device pour les mêmes topics MQTT.
 
-3. `docker compose ps` pour vérifier que `mongodb`/`kafka` (et `mosquitto` en profil `hardware`) sont `healthy` avant de considérer le déploiement stable.
+3. `docker compose ps` pour vérifier que `mongodb`/`kafka` (et `mosquitto` en profil `mock`/`hardware`) sont `healthy` avant de considérer le déploiement stable.
 
 ## Point d'attention : passthrough USB du dongle Zigbee (Debian vs Windows)
 

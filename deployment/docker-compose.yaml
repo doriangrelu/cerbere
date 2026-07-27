@@ -44,6 +44,7 @@ services:
     image: cerbere-core:latest
     pull_policy: never
     container_name: cerbere-core
+    profiles: ["apps"]
     ports:
       - "8082:8082"
     environment:
@@ -59,6 +60,7 @@ services:
     image: cerbere-history:latest
     pull_policy: never
     container_name: cerbere-history
+    profiles: ["apps"]
     ports:
       - "8084:8084"
     environment:
@@ -74,6 +76,7 @@ services:
     image: cerbere-bff:latest
     pull_policy: never
     container_name: cerbere-bff
+    profiles: ["apps"]
     ports:
       - "8083:8083"
     environment:
@@ -88,7 +91,7 @@ services:
     image: cerbere-devices-mock:latest
     pull_policy: never
     container_name: cerbere-devices-mock
-    profiles: ["mock"]
+    profiles: ["apps"]
     ports:
       - "8081:8081"
     environment:
@@ -133,7 +136,7 @@ services:
     image: cerbere-devices-bridge:latest
     pull_policy: never
     container_name: cerbere-devices-bridge
-    profiles: ["mock", "hardware"]
+    profiles: ["apps"]
     ports:
       - "8085:8085"
     environment:
@@ -159,10 +162,20 @@ volumes:
 # (./mvnw spring-boot:build-image, voir docs/adr/0008-strategie-images-cloud-native-buildpacks.md
 # et docs/deployment/nuc-deployment.md) — pull_policy: never pour ne jamais tenter de les
 # récupérer depuis un registre distant.
-# Profils : par défaut (aucun --profile) → mongodb/kafka/core/bff/history seuls.
-# --profile mock → ajoute mosquitto + cerbere-devices-bridge + cerbere-devices-mock : le Mock se
-#   comporte comme un vrai device Zigbee2MQTT (voir ADR 0021), le Bridge le traite exactement
-#   comme du matériel réel — permet de tester le Bridge de bout en bout sans matériel physique.
-# --profile hardware → ajoute mosquitto + cerbere-devices-bridge + zigbee2mqtt (matériel réel).
-# mock et hardware ne doivent jamais tourner ensemble (deux sources concurrentes de messages MQTT
-# pour les mêmes topics zigbee2mqtt/+).
+#
+# Profils orthogonaux (deux axes indépendants, à combiner selon le besoin) :
+# - mongodb/kafka : toujours démarrés (infra de base), quel que soit le profil.
+# - Axe "quelles applications tournent en conteneur" :
+#   --profile apps → cerbere-core/bff/history/devices-mock/devices-bridge en conteneur.
+#     Sans ce profil, aucun module applicatif ne démarre — pratique en dev pour les lancer
+#     soi-même depuis l'IDE (hot-reload) sans conflit de port avec leurs équivalents conteneurisés.
+# - Axe "quelle source de matériel Zigbee" :
+#   --profile mock → ajoute mosquitto : le Mock se comporte comme un vrai device Zigbee2MQTT
+#     (voir ADR 0021), permet de tester cerbere-devices-bridge de bout en bout sans matériel réel.
+#   --profile hardware → ajoute mosquitto + zigbee2mqtt (matériel réel).
+#   mock et hardware ne doivent jamais tourner ensemble (deux sources concurrentes de messages
+#   MQTT pour les mêmes topics zigbee2mqtt/+).
+#
+# Exemples : `--profile mock` seul = infra (mongodb/kafka/mosquitto) pour lancer les 5 modules
+# depuis l'IDE ; `--profile apps --profile mock` = pile complète conteneurisée avec le faux
+# device ; `--profile apps --profile hardware` = pile complète conteneurisée avec du matériel réel.
