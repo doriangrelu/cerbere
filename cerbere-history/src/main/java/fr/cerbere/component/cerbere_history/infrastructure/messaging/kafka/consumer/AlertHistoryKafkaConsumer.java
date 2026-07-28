@@ -25,7 +25,7 @@ public final class AlertHistoryKafkaConsumer {
 
 	@KafkaListener(
 		topics = "cerbere.alarm.alerts",
-		groupId = "${spring.application.name}",
+		groupId = "${spring.application.name}-alerts",
 		containerFactory = "eventEnvelopeKafkaListenerContainerFactory"
 	)
 	public void onMessage(final EventEnvelope envelope) {

@@ -25,7 +25,7 @@ public final class DeviceEventHistoryKafkaConsumer {
 
 	@KafkaListener(
 		topics = "cerbere.device.events.raw",
-		groupId = "${spring.application.name}",
+		groupId = "${spring.application.name}-device-events",
 		containerFactory = "eventEnvelopeKafkaListenerContainerFactory"
 	)
 	public void onMessage(final EventEnvelope envelope) {

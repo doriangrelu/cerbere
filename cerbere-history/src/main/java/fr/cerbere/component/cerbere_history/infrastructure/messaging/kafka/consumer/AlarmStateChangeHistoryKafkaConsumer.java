@@ -23,7 +23,7 @@ public final class AlarmStateChangeHistoryKafkaConsumer {
 
 	@KafkaListener(
 		topics = "cerbere.alarm.state-changed",
-		groupId = "${spring.application.name}",
+		groupId = "${spring.application.name}-alarm-state-changed",
 		containerFactory = "eventEnvelopeKafkaListenerContainerFactory"
 	)
 	public void onMessage(final EventEnvelope envelope) {

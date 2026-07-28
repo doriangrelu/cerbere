@@ -29,7 +29,7 @@ public final class DeviceStateKafkaConsumer {
 
 	@KafkaListener(
 		topics = "cerbere.device.state",
-		groupId = "${spring.application.name}",
+		groupId = "${spring.application.name}-device-state",
 		containerFactory = "eventEnvelopeKafkaListenerContainerFactory"
 	)
 	public void onMessage(final EventEnvelope envelope) {
