@@ -130,7 +130,7 @@ public final class DeviceAdminController {
 	private DeviceRow toRow(final DeviceResponse device, final Map<String, String> zoneNamesById) {
 		final String zoneName = device.zoneId() == null ? null : zoneNamesById.getOrDefault(device.zoneId(), "Zone supprimée");
 		final String lastSeenAt = device.lastSeenAt() == null ? "—" : LAST_SEEN_AT_FORMATTER.format(device.lastSeenAt());
-		return new DeviceRow(device.id(), device.type(), device.label(), device.zoneId(), zoneName, device.enabled(), device.violation(), lastSeenAt);
+		return new DeviceRow(device.id(), device.type(), device.label(), device.zoneId(), zoneName, device.enabled(), device.violation(), device.linked(), lastSeenAt);
 	}
 
 	private String blankToNull(final String value) {

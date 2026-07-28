@@ -11,6 +11,7 @@
 			<th>Zone</th>
 			<th>Statut</th>
 			<th>Violation</th>
+			<th>Appairage</th>
 			<th>Dernière activité</th>
 			<th></th>
 		</tr>
@@ -49,6 +50,10 @@
 				<span class="chip small" th:classappend="${device.violation()} ? 'error' : 'surface-variant'"
 					  th:text="${device.violation()} ? 'Violation' : 'OK'"></span>
 			</td>
+			<td>
+				<span class="chip small" th:classappend="${device.linked()} ? 'primary' : 'surface-variant'"
+					  th:text="${device.linked()} ? 'Appairé' : 'Non appairé'"></span>
+			</td>
 			<td th:text="${device.lastSeenAt()}"></td>
 			<td>
 				<div class="row">
@@ -68,7 +73,7 @@
 			</td>
 		</tr>
 		<tr th:if="${#lists.isEmpty(devices)}">
-			<td colspan="7">Aucun device enregistré.</td>
+			<td colspan="8">Aucun device enregistré.</td>
 		</tr>
 		</tbody>
 	</table>

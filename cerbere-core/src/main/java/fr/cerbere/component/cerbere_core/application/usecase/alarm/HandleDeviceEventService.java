@@ -27,6 +27,9 @@ import java.util.UUID;
  * device est désactivé, ou si l'événement ne constitue pas une violation compte
  * tenu du mode d'armement (voir {@link fr.cerbere.component.cerbere_core.domain.model.ArmingMode}
  * pour la différence AWAY/HOME). Déclenche l'alarme et lève une alerte sinon.
+ * Marque le device {@code linked} au premier événement accepté (voir ADR 0022) :
+ * c'est la seule preuve fiable qu'un device physique/simulé communique
+ * effectivement sous cet id, jamais réinitialisée ensuite.
  */
 @RequiredArgsConstructor
 public final class HandleDeviceEventService implements HandleDeviceEventUseCase {
@@ -77,7 +80,8 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
 
     private Device processDevice(final boolean isViolation, final Device device, final Instant occurredAt) {
         final Device withState = isViolation ? device.withViolation() : device.withoutViolation();
-        final Device current = withState.withLastSeenAt(occurredAt);
+        final Device withLastSeenAt = withState.withLastSeenAt(occurredAt);
+        final Device current = withLastSeenAt.isLinked() ? withLastSeenAt : withLastSeenAt.withLinked();
         final Device saved = this.deviceRepository.save(current);
         this.recomputeZoneViolationService.recompute(saved.getZoneId());
         return saved;

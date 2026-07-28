@@ -14,14 +14,17 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Implémentation de la supervision de vie (voir ADR 0020). Un device actif et
- * pas déjà en violation dont {@code lastSeenAt} dépasse le délai configuré est
+ * Implémentation de la supervision de vie (voir ADR 0020, restreinte aux devices
+ * appairés par ADR 0022). Un device actif, déjà appairé ({@code linked}) et pas
+ * déjà en violation dont {@code lastSeenAt} dépasse le délai configuré est
  * marqué en violation (même état que pour une vraie violation capteur, la
  * zone/l'alarme sont recalculées de la même façon), et une alerte dédiée est
- * levée. Un device déjà en violation n'est pas retraité à chaque passage du
- * scheduler (évite de relever une alerte en boucle) — il redevient supervisé
- * normalement dès qu'un nouvel événement le fait ressortir de la violation
- * (voir {@code HandleDeviceEventService}).
+ * levée. Un device jamais appairé est ignoré : il n'a jamais eu l'occasion de
+ * communiquer, ce n'est pas une violation, seulement une provision en attente
+ * (voir ADR 0022). Un device déjà en violation n'est pas retraité à chaque
+ * passage du scheduler (évite de relever une alerte en boucle) — il redevient
+ * supervisé normalement dès qu'un nouvel événement le fait ressortir de la
+ * violation (voir {@code HandleDeviceEventService}).
  */
 public final class CheckDeviceHeartbeatsService implements CheckDeviceHeartbeatsUseCase {
 
@@ -48,6 +51,7 @@ public final class CheckDeviceHeartbeatsService implements CheckDeviceHeartbeats
 		final Instant now = Instant.now();
 		this.deviceRepository.findAll().stream()
 			.filter(Device::isEnabled)
+			.filter(Device::isLinked)
 			.filter(device -> !device.isViolation())
 			.filter(device -> this.isStale(device, now))
 			.forEach(device -> this.markUnreachable(device, now));

@@ -62,6 +62,7 @@ class CheckDeviceHeartbeatsServiceTest {
 	@Test
 	void checkShouldMarkStaleEnabledDeviceAsViolatingAndRaiseAlert() {
 		final Device device = Device.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte", null)
+			.withLinked()
 			.withLastSeenAt(Instant.now().minus(Duration.ofMinutes(10)));
 		this.deviceRepository.save(device);
 
@@ -77,6 +78,7 @@ class CheckDeviceHeartbeatsServiceTest {
 	void checkShouldTriggerAlarmWhenArmedAndDeviceGoesStale() {
 		this.alarmSystemRepository.save(AlarmSystem.initial(AlarmSystem.DEFAULT_SYSTEM_ID).arm(ArmingMode.AWAY));
 		final Device device = Device.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte", null)
+			.withLinked()
 			.withLastSeenAt(Instant.now().minus(Duration.ofMinutes(10)));
 		this.deviceRepository.save(device);
 
@@ -85,6 +87,18 @@ class CheckDeviceHeartbeatsServiceTest {
 		final AlarmSystem saved = this.alarmSystemRepository.findById(AlarmSystem.DEFAULT_SYSTEM_ID).orElseThrow();
 		assertThat(saved.isTriggered()).isTrue();
 		assertThat(this.alarmStateChangedPublisher.publishedEvents()).hasSize(1);
+	}
+
+	@Test
+	void checkShouldIgnoreNeverLinkedStaleDevice() {
+		final Device device = Device.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte", null)
+			.withLastSeenAt(Instant.now().minus(Duration.ofMinutes(10)));
+		this.deviceRepository.save(device);
+
+		this.service.check();
+
+		assertThat(this.deviceRepository.findById(device.getId()).orElseThrow().isViolation()).isFalse();
+		assertThat(this.alertPublisher.publishedAlerts()).isEmpty();
 	}
 
 	@Test
@@ -101,6 +115,7 @@ class CheckDeviceHeartbeatsServiceTest {
 	@Test
 	void checkShouldIgnoreDisabledDevice() {
 		final Device device = Device.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte", null)
+			.withLinked()
 			.withEnabled(false)
 			.withLastSeenAt(Instant.now().minus(Duration.ofMinutes(10)));
 		this.deviceRepository.save(device);
@@ -114,6 +129,7 @@ class CheckDeviceHeartbeatsServiceTest {
 	@Test
 	void checkShouldNotRaiseAlertAgainForDeviceAlreadyMarkedViolating() {
 		final Device device = Device.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte", null)
+			.withLinked()
 			.withViolation()
 			.withLastSeenAt(Instant.now().minus(Duration.ofMinutes(10)));
 		this.deviceRepository.save(device);

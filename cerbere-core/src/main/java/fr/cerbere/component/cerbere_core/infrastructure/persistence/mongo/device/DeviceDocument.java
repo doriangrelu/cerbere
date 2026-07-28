@@ -18,6 +18,7 @@ public record DeviceDocument(
         String zoneId,
         boolean violation,
         boolean enabled,
+        boolean linked,
         Instant lastSeenAt,
         @Version Long version
 ) {
