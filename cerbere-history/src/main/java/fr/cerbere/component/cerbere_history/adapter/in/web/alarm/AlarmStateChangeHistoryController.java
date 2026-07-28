@@ -24,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/history/alarm-state-changes")
 @RequiredArgsConstructor
-public final class AlarmStateChangeHistoryController {
+public class AlarmStateChangeHistoryController {
 
 	private final ListAlarmStateChangesUseCase listAlarmStateChangesUseCase;
 	private final AlarmStateChangeHistoryWebMapper alarmStateChangeHistoryWebMapper;

@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 @RequiredArgsConstructor
-public final class ZoneAdminController {
+public class ZoneAdminController {
 
 	private static final String ZONES_ATTRIBUTE = "zones";
 	private static final String ZONE_ERROR_ATTRIBUTE = "zoneError";

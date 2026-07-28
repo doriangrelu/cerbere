@@ -34,7 +34,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/devices-mock")
 @RequiredArgsConstructor
-public final class SimulatedDeviceController {
+public class SimulatedDeviceController {
 
     private final ListSimulatedDevicesUseCase listSimulatedDevicesUseCase;
     private final RegisterSimulatedDeviceUseCase registerSimulatedDeviceUseCase;

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  */
 @Controller
 @RequiredArgsConstructor
-public final class AlarmDashboardController {
+public class AlarmDashboardController {
 
 	private static final String STATUS_ATTRIBUTE = "alarmStatus";
 	private static final String STATUS_FRAGMENT = "fragments/alarm-status :: alarmStatus";

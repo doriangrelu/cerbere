@@ -17,7 +17,7 @@ import java.util.UUID;
  * {@code <base-topic>/<deviceId>/set} — voir docs/architecture/mqtt-zigbee-contracts.md.
  */
 @Component
-public final class MqttCommandPublisher implements DeviceCommandPublisher {
+public class MqttCommandPublisher implements DeviceCommandPublisher {
 
 	private final MqttClient mqttClient;
 	private final ObjectMapper objectMapper;

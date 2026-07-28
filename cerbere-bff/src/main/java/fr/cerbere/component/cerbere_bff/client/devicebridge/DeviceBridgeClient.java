@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public final class DeviceBridgeClient {
+public class DeviceBridgeClient {
 
 	private final RestClient devicesBridgeRestClient;
 

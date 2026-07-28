@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Configuration;
  * redémarrages du mock côté broker.
  */
 @Configuration(proxyBeanMethods = false)
-public final class MqttClientConfig {
+public class MqttClientConfig {
 
 	private static final int QOS = 1;
 

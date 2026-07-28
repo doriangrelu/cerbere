@@ -26,7 +26,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/history/alerts")
 @RequiredArgsConstructor
-public final class AlertHistoryController {
+public class AlertHistoryController {
 
 	private final ListAlertsUseCase listAlertsUseCase;
 	private final AlertHistoryWebMapper alertHistoryWebMapper;

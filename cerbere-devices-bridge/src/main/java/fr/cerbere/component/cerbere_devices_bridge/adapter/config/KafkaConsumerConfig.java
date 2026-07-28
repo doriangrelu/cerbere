@@ -20,7 +20,7 @@ import java.util.Map;
  */
 @EnableKafka
 @Configuration(proxyBeanMethods = false)
-public final class KafkaConsumerConfig {
+public class KafkaConsumerConfig {
 
 	@Bean
 	public ConsumerFactory<String, EventEnvelope> eventEnvelopeConsumerFactory(

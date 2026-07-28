@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @Controller
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "cerbere.bff.test-mode", name = "enabled", havingValue = "true")
-public final class TestModeController {
+public class TestModeController {
 
     private static final String SIMULATED_DEVICES_ATTRIBUTE = "simulatedDevices";
     private static final String SIMULATED_DEVICE_ERROR_ATTRIBUTE = "simulatedDeviceError";

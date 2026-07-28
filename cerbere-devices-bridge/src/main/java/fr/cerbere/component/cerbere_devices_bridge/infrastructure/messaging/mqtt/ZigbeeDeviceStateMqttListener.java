@@ -42,7 +42,7 @@ import java.util.UUID;
  * connexion MQTT.
  */
 @Component
-public final class ZigbeeDeviceStateMqttListener implements MqttCallback {
+public class ZigbeeDeviceStateMqttListener implements MqttCallback {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZigbeeDeviceStateMqttListener.class);
 

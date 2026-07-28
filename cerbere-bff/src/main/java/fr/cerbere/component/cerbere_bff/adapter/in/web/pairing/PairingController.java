@@ -34,7 +34,7 @@ import java.util.List;
  */
 @Controller
 @RequiredArgsConstructor
-public final class PairingController {
+public class PairingController {
 
 	private static final String DISCOVERED_DEVICES_ATTRIBUTE = "discoveredDevices";
 	private static final String HAS_PAIRABLE_DEVICES_ATTRIBUTE = "hasPairableDevices";

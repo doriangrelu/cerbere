@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * (voir docs/best-practices/kafka-conventions.md).
  */
 @Component
-public final class DeviceEventKafkaProducer implements DeviceEventPublisher {
+public class DeviceEventKafkaProducer implements DeviceEventPublisher {
 
 	public static final String TOPIC = "cerbere.device.events.raw";
 

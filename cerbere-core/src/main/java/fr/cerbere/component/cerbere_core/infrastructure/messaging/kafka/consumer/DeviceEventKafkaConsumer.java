@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public final class DeviceEventKafkaConsumer {
+public class DeviceEventKafkaConsumer {
 
 	private final HandleDeviceEventUseCase handleDeviceEventUseCase;
 

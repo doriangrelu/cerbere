@@ -34,7 +34,7 @@ import tools.jackson.databind.ObjectMapper;
  * d'exception qui romprait la connexion MQTT.
  */
 @Component
-public final class MqttCommandListener implements MqttCallback {
+public class MqttCommandListener implements MqttCallback {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MqttCommandListener.class);
 	private static final String SET_SUFFIX = "/set";

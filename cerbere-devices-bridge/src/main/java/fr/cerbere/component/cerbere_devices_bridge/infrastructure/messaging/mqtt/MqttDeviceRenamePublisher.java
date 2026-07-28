@@ -19,7 +19,7 @@ import tools.jackson.databind.ObjectMapper;
  * (ADR 0021) — le Bridge ne fait aucune différence entre les deux.
  */
 @Component
-public final class MqttDeviceRenamePublisher implements DeviceRenamePublisher {
+public class MqttDeviceRenamePublisher implements DeviceRenamePublisher {
 
 	private static final String RENAME_TOPIC_SUFFIX = "/bridge/request/device/rename";
 	private static final int QOS = 1;

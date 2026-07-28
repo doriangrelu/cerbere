@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 @RequiredArgsConstructor
-public final class DeviceAdminController {
+public class DeviceAdminController {
 
 	private static final String DEVICES_ATTRIBUTE = "devices";
 	private static final String ZONES_ATTRIBUTE = "zones";

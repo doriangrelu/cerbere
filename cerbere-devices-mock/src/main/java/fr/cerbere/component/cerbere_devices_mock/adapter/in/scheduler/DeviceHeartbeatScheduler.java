@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public final class DeviceHeartbeatScheduler {
+public class DeviceHeartbeatScheduler {
 
 	private final EmitDeviceHeartbeatsUseCase emitDeviceHeartbeatsUseCase;
 

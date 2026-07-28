@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 /**
  * Active le support {@code @Scheduled} requis par {@code DeviceHeartbeatScheduler}.
  */
-@Configuration(proxyBeanMethods = false)
+@Configuration
 @EnableScheduling
-public final class SchedulingConfig {
+public class SchedulingConfig {
 }

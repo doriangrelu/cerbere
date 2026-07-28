@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public final class AlarmStateChangedKafkaProducer implements AlarmStateChangedPublisher {
+public class AlarmStateChangedKafkaProducer implements AlarmStateChangedPublisher {
 
 	public static final String TOPIC = "cerbere.alarm.state-changed";
 

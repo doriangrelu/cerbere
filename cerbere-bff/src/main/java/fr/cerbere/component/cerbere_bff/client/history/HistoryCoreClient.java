@@ -16,7 +16,7 @@ import org.springframework.web.client.RestClient;
  */
 @Component
 @RequiredArgsConstructor
-public final class HistoryCoreClient {
+public class HistoryCoreClient {
 
 	private final RestClient historyRestClient;
 

@@ -11,7 +11,7 @@ import org.springframework.web.client.RestClient;
  * (recette interne, pas d'exposition internet — voir ADR 0015).
  */
 @Configuration(proxyBeanMethods = false)
-public final class RestClientConfig {
+public class RestClientConfig {
 
 	@Bean
 	public RestClient coreRestClient(@Value("${cerbere.core.base-url}") final String baseUrl) {

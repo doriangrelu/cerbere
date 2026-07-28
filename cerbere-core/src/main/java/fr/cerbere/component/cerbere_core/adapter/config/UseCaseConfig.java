@@ -50,7 +50,7 @@ import java.time.Duration;
  * séparément dans {@link ApplicationServiceConfig} — voir ADR 0018.
  */
 @Configuration(proxyBeanMethods = false)
-public final class UseCaseConfig {
+public class UseCaseConfig {
 
     @Bean
     public RegisterDeviceUseCase registerDeviceUseCase(final DeviceRepository deviceRepository, final DevicePublisher devicePublisher) {

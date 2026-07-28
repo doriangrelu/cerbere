@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public final class DeviceSupervisionChangedListener {
+public class DeviceSupervisionChangedListener {
 
 	private final ReevaluateAlarmStateUseCase reevaluateAlarmStateUseCase;
 

@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public final class ZoneCoreClient {
+public class ZoneCoreClient {
 
 	private final RestClient coreRestClient;
 

@@ -18,7 +18,7 @@ import java.time.Duration;
  * {@code cerbere-devices-mock}, {@code cerbere-core} n'en est que consommateur.
  */
 @Configuration(proxyBeanMethods = false)
-public final class KafkaTopicConfig {
+public class KafkaTopicConfig {
 
     private static final int PARTITIONS = 3;
     private static final int REPLICAS = 1;

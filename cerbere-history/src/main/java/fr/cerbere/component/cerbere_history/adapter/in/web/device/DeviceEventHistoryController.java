@@ -26,7 +26,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/history/device-events")
 @RequiredArgsConstructor
-public final class DeviceEventHistoryController {
+public class DeviceEventHistoryController {
 
 	private final ListDeviceEventsUseCase listDeviceEventsUseCase;
 	private final DeviceEventHistoryWebMapper deviceEventHistoryWebMapper;

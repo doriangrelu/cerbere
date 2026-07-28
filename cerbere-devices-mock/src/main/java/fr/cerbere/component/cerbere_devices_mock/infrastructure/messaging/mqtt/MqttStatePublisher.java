@@ -25,7 +25,7 @@ import tools.jackson.databind.ObjectMapper;
  * entre le Mock et du matériel réel.
  */
 @Component
-public final class MqttStatePublisher implements DeviceStatePublisher {
+public class MqttStatePublisher implements DeviceStatePublisher {
 
 	private static final int QOS = 1;
 

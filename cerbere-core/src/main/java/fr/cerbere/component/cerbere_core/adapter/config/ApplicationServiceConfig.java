@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
  * Distinct de {@link UseCaseConfig}, réservé aux ports d'entrée exposés.
  */
 @Configuration(proxyBeanMethods = false)
-public final class ApplicationServiceConfig {
+public class ApplicationServiceConfig {
 
 	@Bean
 	public RecomputeZoneViolationService recomputeZoneViolationService(final ZoneRepository zoneRepository, final DeviceRepository deviceRepository) {

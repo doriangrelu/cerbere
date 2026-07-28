@@ -8,5 +8,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Configuration(proxyBeanMethods = false)
 @EnableScheduling
-public final class SchedulingConfig {
+public class SchedulingConfig {
 }

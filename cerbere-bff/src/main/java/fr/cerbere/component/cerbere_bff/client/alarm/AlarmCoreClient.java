@@ -13,7 +13,7 @@ import org.springframework.web.client.RestClient;
  */
 @Component
 @RequiredArgsConstructor
-public final class AlarmCoreClient {
+public class AlarmCoreClient {
 
 	private final RestClient coreRestClient;
 

@@ -28,7 +28,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/devices-bridge/discovered-devices")
 @RequiredArgsConstructor
-public final class DiscoveredDeviceController {
+public class DiscoveredDeviceController {
 
 	private final ListDiscoveredDevicesUseCase listDiscoveredDevicesUseCase;
 	private final PairDiscoveredDeviceUseCase pairDiscoveredDeviceUseCase;

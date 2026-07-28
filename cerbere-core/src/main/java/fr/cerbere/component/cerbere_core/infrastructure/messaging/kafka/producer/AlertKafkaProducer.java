@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public final class AlertKafkaProducer implements AlertPublisher {
+public class AlertKafkaProducer implements AlertPublisher {
 
 	public static final String TOPIC = "cerbere.alarm.alerts";
 

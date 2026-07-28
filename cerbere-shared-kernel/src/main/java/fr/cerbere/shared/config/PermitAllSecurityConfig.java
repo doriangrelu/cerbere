@@ -14,7 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * module par module dès que Keycloak est branché.
  */
 @Configuration(proxyBeanMethods = false)
-public final class PermitAllSecurityConfig {
+public class PermitAllSecurityConfig {
 
 	@Bean
 	public SecurityFilterChain permitAllSecurityFilterChain(final HttpSecurity httpSecurity) throws Exception {

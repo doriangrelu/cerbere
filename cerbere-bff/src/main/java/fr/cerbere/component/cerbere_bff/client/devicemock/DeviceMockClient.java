@@ -22,7 +22,7 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public final class DeviceMockClient {
+public class DeviceMockClient {
 
 	private final RestClient devicesMockRestClient;
 

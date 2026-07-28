@@ -19,7 +19,7 @@ import java.util.Map;
  * format d'enveloppe, topics différents choisis à l'envoi).
  */
 @Configuration(proxyBeanMethods = false)
-public final class KafkaProducerConfig {
+public class KafkaProducerConfig {
 
 	@Bean
 	public ProducerFactory<String, EventEnvelope> eventEnvelopeProducerFactory(

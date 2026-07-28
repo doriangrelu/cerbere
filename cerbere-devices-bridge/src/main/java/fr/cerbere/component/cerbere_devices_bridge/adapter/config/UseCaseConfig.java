@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
  * (voir ADR 0001) : leur instanciation et leur exposition en tant que bean se font ici.
  */
 @Configuration(proxyBeanMethods = false)
-public final class UseCaseConfig {
+public class UseCaseConfig {
 
 	@Bean
 	public RegisterBridgedDeviceUseCase registerBridgedDeviceUseCase(final BridgedDeviceRepository bridgedDeviceRepository) {

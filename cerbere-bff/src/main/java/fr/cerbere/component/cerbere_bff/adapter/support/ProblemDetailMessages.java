@@ -12,7 +12,7 @@ import tools.jackson.databind.ObjectMapper;
  * l'afficher dans un fragment d'erreur plutôt que le JSON brut.
  */
 @Component
-public final class ProblemDetailMessages {
+public class ProblemDetailMessages {
 
 	private final ObjectMapper objectMapper;
 

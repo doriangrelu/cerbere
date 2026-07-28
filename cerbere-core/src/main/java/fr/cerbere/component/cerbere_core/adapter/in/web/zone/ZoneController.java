@@ -32,7 +32,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/zones")
 @RequiredArgsConstructor
-public final class ZoneController {
+public class ZoneController {
 
 	private final RegisterZoneUseCase registerZoneUseCase;
 	private final UpdateZoneUseCase updateZoneUseCase;

@@ -18,7 +18,7 @@ import java.util.Map;
  * plutôt que de dépendre de l'auto-configuration générique de Spring Boot.
  */
 @Configuration(proxyBeanMethods = false)
-public final class KafkaProducerConfig {
+public class KafkaProducerConfig {
 
 	@Bean
 	public ProducerFactory<String, EventEnvelope> deviceEventProducerFactory(

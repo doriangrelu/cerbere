@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public final class AlarmStateChangedKafkaConsumer {
+public class AlarmStateChangedKafkaConsumer {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AlarmStateChangedKafkaConsumer.class);
 

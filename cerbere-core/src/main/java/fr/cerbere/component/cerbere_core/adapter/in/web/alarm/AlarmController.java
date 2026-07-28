@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/alarm")
 @RequiredArgsConstructor
-public final class AlarmController {
+public class AlarmController {
 
 	private final ArmSystemUseCase armSystemUseCase;
 	private final DisarmSystemUseCase disarmSystemUseCase;

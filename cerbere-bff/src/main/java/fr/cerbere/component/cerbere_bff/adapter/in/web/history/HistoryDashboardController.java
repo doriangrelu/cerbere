@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 @RequiredArgsConstructor
-public final class HistoryDashboardController {
+public class HistoryDashboardController {
 
 	private static final int PAGE_SIZE = 10;
 	private static final String NO_DEVICE = "—";

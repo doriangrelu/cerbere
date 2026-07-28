@@ -33,7 +33,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/devices")
 @RequiredArgsConstructor
-public final class DeviceController {
+public class DeviceController {
 
 	private final RegisterDeviceUseCase registerDeviceUseCase;
 	private final UpdateDeviceUseCase updateDeviceUseCase;

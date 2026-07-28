@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
  * en tant que bean se font ici.
  */
 @Configuration(proxyBeanMethods = false)
-public final class UseCaseConfig {
+public class UseCaseConfig {
 
 	@Bean
 	public DeviceEventHistoryService deviceEventHistoryService(final DeviceEventRecordRepository deviceEventRecordRepository) {

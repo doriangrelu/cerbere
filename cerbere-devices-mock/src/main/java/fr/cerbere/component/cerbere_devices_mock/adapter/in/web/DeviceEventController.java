@@ -20,7 +20,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/devices-mock/{deviceId}/events")
-public final class DeviceEventController {
+public class DeviceEventController {
 
 	private final TriggerDeviceEventUseCase triggerDeviceEventUseCase;
 

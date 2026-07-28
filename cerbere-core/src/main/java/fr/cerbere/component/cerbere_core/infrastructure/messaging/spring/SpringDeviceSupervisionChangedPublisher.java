@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public final class SpringDeviceSupervisionChangedPublisher implements DeviceSupervisionChangedPublisher {
+public class SpringDeviceSupervisionChangedPublisher implements DeviceSupervisionChangedPublisher {
 
 	private final ApplicationEventPublisher applicationEventPublisher;
 

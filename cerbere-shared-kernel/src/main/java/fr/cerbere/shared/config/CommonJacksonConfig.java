@@ -18,7 +18,7 @@ import tools.jackson.databind.json.JsonMapper;
  * chaque application, le scan de composants ne traversant pas les modules.
  */
 @Configuration(proxyBeanMethods = false)
-public final class CommonJacksonConfig {
+public class CommonJacksonConfig {
 
 	@Bean
 	public ObjectMapper objectMapper() {

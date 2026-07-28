@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public final class DeviceEventHistoryKafkaConsumer {
+public class DeviceEventHistoryKafkaConsumer {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DeviceEventHistoryKafkaConsumer.class);
 

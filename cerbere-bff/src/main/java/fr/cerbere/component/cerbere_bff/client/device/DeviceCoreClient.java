@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public final class DeviceCoreClient {
+public class DeviceCoreClient {
 
 	private final RestClient coreRestClient;
 
