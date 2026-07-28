@@ -83,6 +83,7 @@ services:
       CERBERE_CORE_BASEURL: http://cerbere-core:8082
       CERBERE_DEVICESMOCK_BASEURL: http://cerbere-devices-mock:8081
       CERBERE_HISTORY_BASEURL: http://cerbere-history:8084
+      CERBERE_DEVICESBRIDGE_BASEURL: http://cerbere-devices-bridge:8085
     depends_on:
       - cerbere-core
       - cerbere-history
@@ -103,10 +104,13 @@ services:
       mosquitto:
         condition: service_started
 
+  # Broker MQTT : infrastructure de base au même titre que mongodb/kafka, donc sans
+  # profil. Le Mock comme le Bridge en dépendent dans tous les cas de figure (voir
+  # ADR 0021) — le laisser toujours démarré évite l'erreur classique du profil oublié,
+  # qui se traduirait par un Mock et un Bridge incapables de se connecter.
   mosquitto:
     image: eclipse-mosquitto:latest
     container_name: cerbere-mosquitto
-    profiles: ["mock", "hardware"]
     ports:
       - "1883:1883"
     volumes:
@@ -116,6 +120,9 @@ services:
   zigbee2mqtt:
     image: koenkk/zigbee2mqtt:latest
     container_name: cerbere-zigbee2mqtt
+    # Strictement réservé au profil hardware : exige le dongle coordinateur branché
+    # (voir devices/ plus bas). Sans profil, ce service échouerait à démarrer sur
+    # toute machine sans dongle — y compris pour une simple démo avec le Mock.
     profiles: ["hardware"]
     ports:
       - "8090:8080"
@@ -164,18 +171,18 @@ volumes:
 # récupérer depuis un registre distant.
 #
 # Profils orthogonaux (deux axes indépendants, à combiner selon le besoin) :
-# - mongodb/kafka : toujours démarrés (infra de base), quel que soit le profil.
+# - mongodb/kafka/mosquitto : toujours démarrés (infra de base), quel que soit le profil.
 # - Axe "quelles applications tournent en conteneur" :
 #   --profile apps → cerbere-core/bff/history/devices-mock/devices-bridge en conteneur.
 #     Sans ce profil, aucun module applicatif ne démarre — pratique en dev pour les lancer
 #     soi-même depuis l'IDE (hot-reload) sans conflit de port avec leurs équivalents conteneurisés.
-# - Axe "quelle source de matériel Zigbee" :
-#   --profile mock → ajoute mosquitto : le Mock se comporte comme un vrai device Zigbee2MQTT
-#     (voir ADR 0021), permet de tester cerbere-devices-bridge de bout en bout sans matériel réel.
-#   --profile hardware → ajoute mosquitto + zigbee2mqtt (matériel réel).
-#   mock et hardware ne doivent jamais tourner ensemble (deux sources concurrentes de messages
-#   MQTT pour les mêmes topics zigbee2mqtt/+).
+# - Axe "source de matériel Zigbee" :
+#   sans profil → aucune passerelle Zigbee réelle : c'est le Mock qui joue le device et la
+#     passerelle (voir ADR 0021/0023), suffisant pour tester le Bridge de bout en bout.
+#   --profile hardware → ajoute zigbee2mqtt, qui exige le dongle coordinateur branché.
+#     Ne jamais l'activer en même temps qu'un Mock en marche : deux sources concurrentes de
+#     messages MQTT sur les mêmes topics zigbee2mqtt/+.
 #
-# Exemples : `--profile mock` seul = infra (mongodb/kafka/mosquitto) pour lancer les 5 modules
-# depuis l'IDE ; `--profile apps --profile mock` = pile complète conteneurisée avec le faux
-# device ; `--profile apps --profile hardware` = pile complète conteneurisée avec du matériel réel.
+# Exemples : aucun profil = infra seule (mongodb/kafka/mosquitto) pour lancer les 5 modules
+# depuis l'IDE ; `--profile apps` = pile complète conteneurisée avec le faux device ;
+# `--profile apps --profile hardware` = pile complète conteneurisée avec du matériel réel.

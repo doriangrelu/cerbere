@@ -38,7 +38,7 @@ Le `friendly_name` Zigbee2MQTT d'un device **est** l'UUID généré par le BFF �
 
 La passerelle répond sur `<base-topic>/bridge/response/device/rename` (`{"data":{...},"status":"ok"}`) — non consommé par le bridge pour l'instant : c'est la réémission du device sous son nouveau nom qui fait foi, et `cerbere-core` qui constate l'appairage effectif à la réception du premier événement (voir ADR 0022).
 
-En profil `mock`, c'est `cerbere-devices-mock` qui traite ce topic, jouant le rôle de la passerelle en plus de celui du device (voir ADR 0021/0023) : le bridge ne fait aucune différence.
+Sans le profil `hardware` (donc sans passerelle Zigbee2MQTT réelle), c'est `cerbere-devices-mock` qui traite ce topic, jouant le rôle de la passerelle en plus de celui du device (voir ADR 0021/0023) : le bridge ne fait aucune différence.
 
 ### Reporting périodique
 

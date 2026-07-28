@@ -4,7 +4,7 @@
 <div th:fragment="pairingSection" id="pairing-section">
 	<article class="error" th:if="${pairingError}" th:text="${pairingError}"></article>
 
-	<article class="surface-variant" th:if="${#lists.isEmpty(pairableDevices)}">
+	<article class="surface-variant" th:unless="${hasPairableDevices}">
 		<p>Aucun device du registre officiel n'est en attente d'appairage. Créez-en un depuis l'écran
 			<a href="/devices">Devices</a> avant de pouvoir rattacher un device détecté.</p>
 	</article>
@@ -24,20 +24,25 @@
 			<td th:text="${device.inferredType()}"></td>
 			<td th:text="${device.lastSeenAt()}"></td>
 			<td>
-				<form class="row" hx-post="/pairing" hx-target="#pairing-section" hx-swap="outerHTML">
+				<form th:unless="${#lists.isEmpty(device.candidates())}" class="row"
+					  hx-post="/pairing" hx-target="#pairing-section" hx-swap="outerHTML">
 					<input type="hidden" name="friendlyName" th:value="${device.friendlyName()}">
 					<div class="field label border small round suffix">
 						<select name="coreDeviceId" required>
-							<option th:each="target : ${pairableDevices}" th:value="${target.id()}"
+							<option th:each="target : ${device.candidates()}" th:value="${target.id()}"
 									class="upper" th:text="${target.label()} + ' (' + ${target.type()} + ')'"></option>
 						</select>
 						<label>Device</label>
 						<i>arrow_drop_down</i>
 					</div>
-					<button class="small circle transparent" type="submit" th:disabled="${#lists.isEmpty(pairableDevices)}">
+					<button class="small circle transparent" type="submit">
 						<i>link</i>
 					</button>
 				</form>
+				<span th:if="${#lists.isEmpty(device.candidates())}" class="chip small surface-variant"
+					  title="Créez un device de ce type dans l'écran Devices pour pouvoir l'appairer">
+					Aucun device compatible
+				</span>
 			</td>
 		</tr>
 		<tr th:if="${#lists.isEmpty(discoveredDevices)}">

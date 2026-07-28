@@ -78,7 +78,8 @@ public final class UseCaseConfig {
 
 	@Bean
 	public PairDiscoveredDeviceUseCase pairDiscoveredDeviceUseCase(final DiscoveredDeviceRepository discoveredDeviceRepository,
+																	  final BridgedDeviceRepository bridgedDeviceRepository,
 																	  final DeviceRenamePublisher deviceRenamePublisher) {
-		return new PairDiscoveredDeviceService(discoveredDeviceRepository, deviceRenamePublisher);
+		return new PairDiscoveredDeviceService(discoveredDeviceRepository, bridgedDeviceRepository, deviceRenamePublisher);
 	}
 }

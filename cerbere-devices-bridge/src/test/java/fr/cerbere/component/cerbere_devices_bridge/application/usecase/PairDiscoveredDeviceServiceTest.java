@@ -1,8 +1,11 @@
 package fr.cerbere.component.cerbere_devices_bridge.application.usecase;
 
+import fr.cerbere.component.cerbere_devices_bridge.domain.exception.DeviceTypeMismatchException;
 import fr.cerbere.component.cerbere_devices_bridge.domain.exception.DiscoveredDeviceNotFoundException;
+import fr.cerbere.component.cerbere_devices_bridge.domain.model.BridgedDevice;
 import fr.cerbere.component.cerbere_devices_bridge.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_bridge.domain.model.DiscoveredDevice;
+import fr.cerbere.component.cerbere_devices_bridge.domain.port.out.BridgedDeviceRepository;
 import fr.cerbere.component.cerbere_devices_bridge.domain.port.out.DeviceRenamePublisher;
 import fr.cerbere.component.cerbere_devices_bridge.domain.port.out.DiscoveredDeviceRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,28 +29,32 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class PairDiscoveredDeviceServiceTest {
 
-	private InMemoryDiscoveredDeviceRepository repository;
+	private static final String FRIENDLY_NAME = "0x00124b0022qs";
+
+	private InMemoryDiscoveredDeviceRepository discoveredDeviceRepository;
+	private InMemoryBridgedDeviceRepository bridgedDeviceRepository;
 	private RecordingDeviceRenamePublisher renamePublisher;
 	private PairDiscoveredDeviceService service;
 
 	@BeforeEach
 	void setUp() {
-		this.repository = new InMemoryDiscoveredDeviceRepository();
+		this.discoveredDeviceRepository = new InMemoryDiscoveredDeviceRepository();
+		this.bridgedDeviceRepository = new InMemoryBridgedDeviceRepository();
 		this.renamePublisher = new RecordingDeviceRenamePublisher();
-		this.service = new PairDiscoveredDeviceService(this.repository, this.renamePublisher);
+		this.service = new PairDiscoveredDeviceService(
+			this.discoveredDeviceRepository, this.bridgedDeviceRepository, this.renamePublisher
+		);
 	}
 
 	@Test
 	void pairShouldRequestRenameToCoreDeviceIdAndDropTheCandidate() {
-		this.repository.save(DiscoveredDevice.discover("0x00124b0022qs", DeviceType.CONTACT, Instant.now()));
-		final UUID coreDeviceId = UUID.randomUUID();
+		this.discoveredDeviceRepository.save(DiscoveredDevice.discover(FRIENDLY_NAME, DeviceType.CONTACT, Instant.now()));
+		final UUID coreDeviceId = this.givenBridgedDevice(DeviceType.CONTACT);
 
-		this.service.pair("0x00124b0022qs", coreDeviceId);
+		this.service.pair(FRIENDLY_NAME, coreDeviceId);
 
-		assertThat(this.renamePublisher.renames()).containsExactly(
-			new Rename("0x00124b0022qs", coreDeviceId.toString())
-		);
-		assertThat(this.repository.findByFriendlyName("0x00124b0022qs")).isEmpty();
+		assertThat(this.renamePublisher.renames()).containsExactly(new Rename(FRIENDLY_NAME, coreDeviceId.toString()));
+		assertThat(this.discoveredDeviceRepository.findByFriendlyName(FRIENDLY_NAME)).isEmpty();
 	}
 
 	@Test
@@ -61,6 +69,52 @@ class PairDiscoveredDeviceServiceTest {
 			.isInstanceOf(DiscoveredDeviceNotFoundException.class);
 
 		assertThat(this.renamePublisher.renames()).isEmpty();
+	}
+
+	@Test
+	void pairShouldRejectAMotionSensorOnAContactDevice() {
+		this.discoveredDeviceRepository.save(DiscoveredDevice.discover(FRIENDLY_NAME, DeviceType.MOTION, Instant.now()));
+		final UUID coreDeviceId = this.givenBridgedDevice(DeviceType.CONTACT);
+
+		assertThatThrownBy(() -> this.service.pair(FRIENDLY_NAME, coreDeviceId))
+			.isInstanceOf(DeviceTypeMismatchException.class);
+	}
+
+	@Test
+	void pairShouldLeaveTheCandidateUntouchedWhenTypesDoNotMatch() {
+		this.discoveredDeviceRepository.save(DiscoveredDevice.discover(FRIENDLY_NAME, DeviceType.MOTION, Instant.now()));
+		final UUID coreDeviceId = this.givenBridgedDevice(DeviceType.SIREN);
+
+		assertThatThrownBy(() -> this.service.pair(FRIENDLY_NAME, coreDeviceId))
+			.isInstanceOf(DeviceTypeMismatchException.class);
+
+		assertThat(this.renamePublisher.renames()).isEmpty();
+		assertThat(this.discoveredDeviceRepository.findByFriendlyName(FRIENDLY_NAME)).isPresent();
+	}
+
+	@Test
+	void pairShouldAllowAnUndeterminedTypeSinceThereIsNothingToCompare() {
+		this.discoveredDeviceRepository.save(DiscoveredDevice.discover(FRIENDLY_NAME, null, Instant.now()));
+		final UUID coreDeviceId = this.givenBridgedDevice(DeviceType.CONTACT);
+
+		this.service.pair(FRIENDLY_NAME, coreDeviceId);
+
+		assertThat(this.renamePublisher.renames()).hasSize(1);
+	}
+
+	@Test
+	void pairShouldAllowWhenTheCoreDeviceMirrorHasNotPropagatedYet() {
+		this.discoveredDeviceRepository.save(DiscoveredDevice.discover(FRIENDLY_NAME, DeviceType.MOTION, Instant.now()));
+
+		this.service.pair(FRIENDLY_NAME, UUID.randomUUID());
+
+		assertThat(this.renamePublisher.renames()).hasSize(1);
+	}
+
+	private UUID givenBridgedDevice(final DeviceType type) {
+		final UUID id = UUID.randomUUID();
+		this.bridgedDeviceRepository.save(BridgedDevice.register(id, type, "Device officiel", null));
+		return id;
 	}
 
 	private record Rename(String from, String to) {
@@ -89,6 +143,37 @@ class PairDiscoveredDeviceServiceTest {
 		@Override
 		public void deleteByFriendlyName(final String friendlyName) {
 			this.devices.remove(friendlyName);
+		}
+	}
+
+	private static final class InMemoryBridgedDeviceRepository implements BridgedDeviceRepository {
+
+		private final Map<UUID, BridgedDevice> devices = new HashMap<>();
+
+		@Override
+		public BridgedDevice save(final BridgedDevice device) {
+			this.devices.put(device.getId(), device);
+			return device;
+		}
+
+		@Override
+		public Optional<BridgedDevice> findById(final UUID id) {
+			return Optional.ofNullable(this.devices.get(id));
+		}
+
+		@Override
+		public List<BridgedDevice> findAll() {
+			return List.copyOf(this.devices.values());
+		}
+
+		@Override
+		public List<BridgedDevice> findByType(final DeviceType type) {
+			return this.devices.values().stream().filter(device -> device.getType() == type).toList();
+		}
+
+		@Override
+		public void deleteById(final UUID id) {
+			this.devices.remove(id);
 		}
 	}
 

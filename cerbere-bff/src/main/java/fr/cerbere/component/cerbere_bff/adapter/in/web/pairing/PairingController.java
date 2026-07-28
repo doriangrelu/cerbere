@@ -24,18 +24,23 @@ import java.util.List;
  * {@code cerbere-devices-bridge} (voir ADR 0023), qui demande à la passerelle
  * Zigbee2MQTT de renommer le {@code friendly_name} — le même geste, et le même
  * code, que le matériel soit réel ou simulé. Cet écran est donc toujours
- * disponible, contrairement au Mode test réservé au pilotage du Mock. L'id du
- * device officiel soumis est revalidé ici avant transmission au Bridge (voir
- * docs/best-practices/frontend-conventions.md).
+ * disponible, contrairement au Mode test réservé au pilotage du Mock.
+ * <p>
+ * Chaque device détecté ne se voit proposer que des cibles de son propre type :
+ * appairer un détecteur de mouvement à une entrée déclarée comme contact ferait
+ * interpréter ses payloads selon le mauvais contrat. Le couple soumis est
+ * revalidé ici avant transmission (voir docs/best-practices/frontend-conventions.md),
+ * et le Bridge refuse de toute façon un appairage incompatible.
  */
 @Controller
 @RequiredArgsConstructor
 public final class PairingController {
 
 	private static final String DISCOVERED_DEVICES_ATTRIBUTE = "discoveredDevices";
-	private static final String PAIRABLE_DEVICES_ATTRIBUTE = "pairableDevices";
+	private static final String HAS_PAIRABLE_DEVICES_ATTRIBUTE = "hasPairableDevices";
 	private static final String PAIRING_ERROR_ATTRIBUTE = "pairingError";
 	private static final String PAIRING_SECTION_FRAGMENT = "fragments/pairing-table :: pairingSection";
+	private static final String UNKNOWN_TYPE = "—";
 	private static final DateTimeFormatter LAST_SEEN_AT_FORMATTER =
 		DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").withZone(ZoneId.systemDefault());
 
@@ -53,10 +58,8 @@ public final class PairingController {
 	public String pair(@RequestParam final String friendlyName,
 						@RequestParam final String coreDeviceId,
 						final Model model) {
-		final boolean targetExistsAndUnlinked = this.deviceCoreClient.listAll().stream()
-			.anyMatch(device -> device.id().equals(coreDeviceId) && !device.linked());
-		if (!targetExistsAndUnlinked) {
-			model.addAttribute(PAIRING_ERROR_ATTRIBUTE, "Device sélectionné introuvable ou déjà apparié.");
+		if (!this.isPairable(friendlyName, coreDeviceId)) {
+			model.addAttribute(PAIRING_ERROR_ATTRIBUTE, "Device sélectionné introuvable, déjà apparié, ou de type incompatible.");
 			this.populateModel(model);
 			return PAIRING_SECTION_FRAGMENT;
 		}
@@ -69,23 +72,55 @@ public final class PairingController {
 		return PAIRING_SECTION_FRAGMENT;
 	}
 
-	private void populateModel(final Model model) {
-		final List<DiscoveredDeviceRow> rows = this.deviceBridgeClient.listDiscoveredDevices().stream()
-			.map(this::toRow)
-			.toList();
-		final List<DeviceResponse> pairableDevices = this.deviceCoreClient.listAll().stream()
-			.filter(device -> !device.linked())
-			.toList();
-		model.addAttribute(DISCOVERED_DEVICES_ATTRIBUTE, rows);
-		model.addAttribute(PAIRABLE_DEVICES_ATTRIBUTE, pairableDevices);
+	/**
+	 * Revérifie que la cible existe, n'est pas déjà appairée, et que son type
+	 * correspond bien à celui détecté sur le device physique.
+	 */
+	private boolean isPairable(final String friendlyName, final String coreDeviceId) {
+		final DiscoveredDeviceResponse discovered = this.deviceBridgeClient.listDiscoveredDevices().stream()
+			.filter(device -> device.friendlyName().equals(friendlyName))
+			.findFirst()
+			.orElse(null);
+		if (discovered == null) {
+			return false;
+		}
+		return this.pairableDevices().stream()
+			.filter(device -> device.id().equals(coreDeviceId))
+			.anyMatch(device -> this.typesMatch(discovered, device));
 	}
 
-	private DiscoveredDeviceRow toRow(final DiscoveredDeviceResponse device) {
-		final String inferredType = device.inferredType() == null ? "—" : device.inferredType();
-		return new DiscoveredDeviceRow(device.friendlyName(), inferredType, this.format(device.lastSeenAt()));
+	private void populateModel(final Model model) {
+		final List<DeviceResponse> pairableDevices = this.pairableDevices();
+		final List<DiscoveredDeviceRow> rows = this.deviceBridgeClient.listDiscoveredDevices().stream()
+			.map(device -> this.toRow(device, pairableDevices))
+			.toList();
+		model.addAttribute(DISCOVERED_DEVICES_ATTRIBUTE, rows);
+		model.addAttribute(HAS_PAIRABLE_DEVICES_ATTRIBUTE, !pairableDevices.isEmpty());
+	}
+
+	private List<DeviceResponse> pairableDevices() {
+		return this.deviceCoreClient.listAll().stream()
+			.filter(device -> !device.linked())
+			.toList();
+	}
+
+	private DiscoveredDeviceRow toRow(final DiscoveredDeviceResponse device, final List<DeviceResponse> pairableDevices) {
+		final List<DeviceResponse> candidates = pairableDevices.stream()
+			.filter(candidate -> this.typesMatch(device, candidate))
+			.toList();
+		final String inferredType = device.inferredType() == null ? UNKNOWN_TYPE : device.inferredType();
+		return new DiscoveredDeviceRow(device.friendlyName(), inferredType, this.format(device.lastSeenAt()), candidates);
+	}
+
+	/**
+	 * Un type indéterminable (payload non reconnu par le bridge) n'exclut rien :
+	 * il n'y a alors rien à comparer, le contrôle serait arbitraire.
+	 */
+	private boolean typesMatch(final DiscoveredDeviceResponse discovered, final DeviceResponse coreDevice) {
+		return discovered.inferredType() == null || discovered.inferredType().equals(coreDevice.type());
 	}
 
 	private String format(final Instant instant) {
-		return instant == null ? "—" : LAST_SEEN_AT_FORMATTER.format(instant);
+		return instant == null ? UNKNOWN_TYPE : LAST_SEEN_AT_FORMATTER.format(instant);
 	}
 }

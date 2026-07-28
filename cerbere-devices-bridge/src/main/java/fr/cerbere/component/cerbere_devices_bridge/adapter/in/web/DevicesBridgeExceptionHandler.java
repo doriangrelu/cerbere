@@ -1,6 +1,7 @@
 package fr.cerbere.component.cerbere_devices_bridge.adapter.in.web;
 
 import fr.cerbere.component.cerbere_devices_bridge.domain.exception.DeviceNotFoundException;
+import fr.cerbere.component.cerbere_devices_bridge.domain.exception.DeviceTypeMismatchException;
 import fr.cerbere.component.cerbere_devices_bridge.domain.exception.DiscoveredDeviceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -26,6 +27,14 @@ public final class DevicesBridgeExceptionHandler {
 	public ProblemDetail handleDeviceNotFound(final DeviceNotFoundException exception) {
 		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
 		problemDetail.setTitle("Bridged device not found");
+		return problemDetail;
+	}
+
+	@ExceptionHandler(DeviceTypeMismatchException.class)
+	public ProblemDetail handleDeviceTypeMismatch(final DeviceTypeMismatchException exception) {
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+			"Types incompatibles : ce device physique ne correspond pas au type du device sélectionné.");
+		problemDetail.setTitle("Device type mismatch");
 		return problemDetail;
 	}
 }
