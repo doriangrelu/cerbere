@@ -1,8 +1,10 @@
 package fr.cerbere.component.cerbere_core.infrastructure.persistence.mongo.alarm;
 
+import fr.cerbere.component.cerbere_core.domain.exception.ConcurrentAlarmSystemUpdateException;
 import fr.cerbere.component.cerbere_core.domain.model.AlarmSystem;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmSystemRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -19,8 +21,12 @@ public class AlarmSystemMongoRepositoryAdapter implements AlarmSystemRepository 
 
 	@Override
 	public AlarmSystem save(final AlarmSystem alarmSystem) {
-		final AlarmSystemDocument saved = this.mongoRepository.save(this.alarmSystemMapper.toDocument(alarmSystem));
-		return this.alarmSystemMapper.toDomain(saved);
+		try {
+			final AlarmSystemDocument saved = this.mongoRepository.save(this.alarmSystemMapper.toDocument(alarmSystem));
+			return this.alarmSystemMapper.toDomain(saved);
+		} catch (final OptimisticLockingFailureException exception) {
+			throw new ConcurrentAlarmSystemUpdateException(alarmSystem.getId(), exception);
+		}
 	}
 
 	@Override
