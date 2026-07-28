@@ -4,7 +4,6 @@ import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.ListSimulatedDevicesUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RegisterSimulatedDeviceUseCase;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RenameSimulatedDeviceUseCase;
 import fr.cerbere.shared.config.CommonJacksonConfig;
 import fr.cerbere.shared.config.PermitAllSecurityConfig;
 import org.junit.jupiter.api.Test;
@@ -44,9 +43,6 @@ class SimulatedDeviceControllerTest {
 
     @MockitoBean
     private ListSimulatedDevicesUseCase listSimulatedDevicesUseCase;
-
-    @MockitoBean
-    private RenameSimulatedDeviceUseCase renameSimulatedDeviceUseCase;
 
     @Test
     void listAllShouldReturnRegisteredDevices() throws Exception {

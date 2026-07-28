@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="pairingSection" id="pairing-section">
+	<article class="error" th:if="${pairingError}" th:text="${pairingError}"></article>
+
+	<article class="surface-variant" th:if="${#lists.isEmpty(pairableDevices)}">
+		<p>Aucun device du registre officiel n'est en attente d'appairage. Créez-en un depuis l'écran
+			<a href="/devices">Devices</a> avant de pouvoir rattacher un device détecté.</p>
+	</article>
+
+	<table class="border striped">
+		<thead>
+		<tr>
+			<th>Identifiant Zigbee</th>
+			<th>Type détecté</th>
+			<th>Dernière activité</th>
+			<th>Apparier à</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:each="device : ${discoveredDevices}">
+			<td th:text="${device.friendlyName()}"></td>
+			<td th:text="${device.inferredType()}"></td>
+			<td th:text="${device.lastSeenAt()}"></td>
+			<td>
+				<form class="row" hx-post="/pairing" hx-target="#pairing-section" hx-swap="outerHTML">
+					<input type="hidden" name="friendlyName" th:value="${device.friendlyName()}">
+					<div class="field label border small round suffix">
+						<select name="coreDeviceId" required>
+							<option th:each="target : ${pairableDevices}" th:value="${target.id()}"
+									class="upper" th:text="${target.label()} + ' (' + ${target.type()} + ')'"></option>
+						</select>
+						<label>Device</label>
+						<i>arrow_drop_down</i>
+					</div>
+					<button class="small circle transparent" type="submit" th:disabled="${#lists.isEmpty(pairableDevices)}">
+						<i>link</i>
+					</button>
+				</form>
+			</td>
+		</tr>
+		<tr th:if="${#lists.isEmpty(discoveredDevices)}">
+			<td colspan="4">Aucun device en attente d'appairage. Un device apparaît ici dès qu'il émet sur MQTT sans être rattaché.</td>
+		</tr>
+		</tbody>
+	</table>
+</div>
+</body>
+</html>

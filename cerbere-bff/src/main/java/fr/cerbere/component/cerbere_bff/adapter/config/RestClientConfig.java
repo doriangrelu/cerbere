@@ -27,4 +27,9 @@ public final class RestClientConfig {
 	public RestClient historyRestClient(@Value("${cerbere.history.base-url}") final String baseUrl) {
 		return RestClient.builder().baseUrl(baseUrl).build();
 	}
+
+	@Bean
+	public RestClient devicesBridgeRestClient(@Value("${cerbere.devices-bridge.base-url}") final String baseUrl) {
+		return RestClient.builder().baseUrl(baseUrl).build();
+	}
 }

@@ -2,8 +2,10 @@ package fr.cerbere.component.cerbere_devices_mock.infrastructure.messaging.mqtt;
 
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SirenState;
-import fr.cerbere.component.cerbere_devices_mock.infrastructure.messaging.mqtt.payload.SwitchState;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RenameSimulatedDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.out.SimulatedDeviceRepository;
+import fr.cerbere.component.cerbere_devices_mock.infrastructure.messaging.mqtt.payload.DeviceRenameRequest;
+import fr.cerbere.component.cerbere_devices_mock.infrastructure.messaging.mqtt.payload.SwitchState;
 import org.eclipse.paho.mqttv5.client.IMqttToken;
 import org.eclipse.paho.mqttv5.client.MqttCallback;
 import org.eclipse.paho.mqttv5.client.MqttDisconnectResponse;
@@ -18,49 +20,72 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Reçoit les commandes publiées par {@code cerbere-devices-bridge} sur
- * {@code <base-topic>/<friendlyName>/set} (voir docs/architecture/mqtt-zigbee-contracts.md
- * et ADR 0021) — le Mock joue ici le rôle du relais Zigbee générique qui pilote
- * la sirène, exactement comme le ferait du matériel réel, ce qui permet de
- * vérifier que la commande envoyée par le Bridge arrive bien et produit le bon
- * effet. Résilient : device inconnu ou payload illisible → log et ignore,
- * jamais d'exception qui romprait la connexion MQTT.
+ * Reçoit les messages adressés au Mock, qui joue à la fois le rôle du device
+ * Zigbee et celui de la passerelle Zigbee2MQTT (voir ADR 0021/0023) :
+ * <ul>
+ *   <li>{@code <base-topic>/<friendlyName>/set} : commande de sirène envoyée par
+ *   {@code cerbere-devices-bridge} — permet de vérifier que la commande arrive
+ *   bien et produit le bon effet, comme sur du matériel réel ;</li>
+ *   <li>{@code <base-topic>/bridge/request/device/rename} : requête d'appairage
+ *   envoyée par le Bridge, traitée exactement comme le ferait la vraie
+ *   passerelle (renommage du {@code friendly_name}).</li>
+ * </ul>
+ * Résilient : device inconnu ou payload illisible → log et ignore, jamais
+ * d'exception qui romprait la connexion MQTT.
  */
 @Component
 public final class MqttCommandListener implements MqttCallback {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MqttCommandListener.class);
 	private static final String SET_SUFFIX = "/set";
+	private static final String RENAME_TOPIC_SUFFIX = "/bridge/request/device/rename";
 
 	private final SimulatedDeviceRepository simulatedDeviceRepository;
+	private final RenameSimulatedDeviceUseCase renameSimulatedDeviceUseCase;
 	private final ObjectMapper objectMapper;
 	private final String baseTopic;
 
 	public MqttCommandListener(final SimulatedDeviceRepository simulatedDeviceRepository,
+							   final RenameSimulatedDeviceUseCase renameSimulatedDeviceUseCase,
 							   @Qualifier("objectMapper") final ObjectMapper objectMapper,
 							   @Value("${cerbere.devices-mock.mqtt.base-topic}") final String baseTopic) {
 		this.simulatedDeviceRepository = simulatedDeviceRepository;
+		this.renameSimulatedDeviceUseCase = renameSimulatedDeviceUseCase;
 		this.objectMapper = objectMapper;
 		this.baseTopic = baseTopic;
 	}
 
 	@Override
 	public void messageArrived(final String topic, final MqttMessage message) {
-		final String withoutBase = topic.substring(this.baseTopic.length() + 1);
-		final String friendlyName = withoutBase.substring(0, withoutBase.length() - SET_SUFFIX.length());
 		try {
-			final SimulatedDevice device = this.simulatedDeviceRepository.findByFriendlyName(friendlyName).orElse(null);
-			if (device == null) {
-				LOGGER.info("Ignoring MQTT command for unknown simulated device {}", friendlyName);
+			if (topic.equals(this.baseTopic + RENAME_TOPIC_SUFFIX)) {
+				this.handleRename(message);
 				return;
 			}
-			final SwitchState parsed = this.objectMapper.readValue(message.getPayload(), SwitchState.class);
-			final SirenState newState = SwitchState.ON.equals(parsed.state()) ? SirenState.ACTIVE : SirenState.INACTIVE;
-			this.simulatedDeviceRepository.save(device.withState(newState));
-			LOGGER.info("Simulated device {} received command: {}", friendlyName, parsed.state());
+			this.handleSirenCommand(topic, message);
 		} catch (final RuntimeException exception) {
-			LOGGER.error("Failed to process MQTT command on topic {}: {}", topic, exception.getMessage());
+			LOGGER.error("Failed to process MQTT message on topic {}: {}", topic, exception.getMessage());
 		}
+	}
+
+	private void handleRename(final MqttMessage message) {
+		final DeviceRenameRequest request = this.objectMapper.readValue(message.getPayload(), DeviceRenameRequest.class);
+		final SimulatedDevice renamed = this.renameSimulatedDeviceUseCase.rename(request.from(), request.to());
+		LOGGER.info("Simulated device renamed (paired): {} -> {}", request.from(), renamed.getFriendlyName());
+	}
+
+	private void handleSirenCommand(final String topic, final MqttMessage message) {
+		final String withoutBase = topic.substring(this.baseTopic.length() + 1);
+		final String friendlyName = withoutBase.substring(0, withoutBase.length() - SET_SUFFIX.length());
+		final SimulatedDevice device = this.simulatedDeviceRepository.findByFriendlyName(friendlyName).orElse(null);
+		if (device == null) {
+			LOGGER.info("Ignoring MQTT command for unknown simulated device {}", friendlyName);
+			return;
+		}
+		final SwitchState parsed = this.objectMapper.readValue(message.getPayload(), SwitchState.class);
+		final SirenState newState = SwitchState.ON.equals(parsed.state()) ? SirenState.ACTIVE : SirenState.INACTIVE;
+		this.simulatedDeviceRepository.save(device.withState(newState));
+		LOGGER.info("Simulated device {} received command: {}", friendlyName, parsed.state());
 	}
 
 	@Override

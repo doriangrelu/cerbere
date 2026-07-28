@@ -19,9 +19,32 @@ Capteur Zigbee ──radio──> Coordinateur (dongle USB) ──> Zigbee2MQTT 
 
 ## Règle de corrélation : `friendly_name` = UUID Cerbère
 
-Le `friendly_name` Zigbee2MQTT d'un device **est** l'UUID généré par le BFF à la création du device dans `cerbere-core` (même principe que la corrélation mock/registre officiel — voir ADR 0004/0016). **Étape manuelle à l'appairage** : après avoir créé le device dans l'écran Devices du BFF (qui génère l'UUID), renommer le device correspondant dans l'interface Zigbee2MQTT (`Rename` sur le device fraîchement appairé) pour que son `friendly_name` soit exactement cet UUID (format `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`).
+Le `friendly_name` Zigbee2MQTT d'un device **est** l'UUID généré par le BFF à la création du device dans `cerbere-core` (même principe que la corrélation mock/registre officiel — voir ADR 0004/0016).
 
-Un message MQTT dont le `friendly_name` n'est ni un UUID valide, ni un device connu du miroir local du bridge, est ignoré silencieusement (log niveau INFO) — jamais d'exception qui romprait la connexion MQTT.
+**L'appairage est donc un renommage**, déclenché depuis l'écran **Appairage** du BFF et exécuté par `cerbere-devices-bridge` (voir ADR 0023) — plus aucune manipulation manuelle dans l'interface Zigbee2MQTT n'est nécessaire.
+
+### Topic d'appairage (API bridge Zigbee2MQTT)
+
+`cerbere-devices-bridge` publie sur `<base-topic>/bridge/request/device/rename` :
+
+```json
+{ "from": "0x00124b0022a1b2c3", "to": "3f2504e0-4f89-11d3-9a0c-0305e82c3301" }
+```
+
+| Champ | Signification |
+|---|---|
+| `from` | `friendly_name` courant (ou adresse IEEE) du device à apparier |
+| `to` | nouveau `friendly_name` = UUID du device dans `cerbere-core` |
+
+La passerelle répond sur `<base-topic>/bridge/response/device/rename` (`{"data":{...},"status":"ok"}`) — non consommé par le bridge pour l'instant : c'est la réémission du device sous son nouveau nom qui fait foi, et `cerbere-core` qui constate l'appairage effectif à la réception du premier événement (voir ADR 0022).
+
+En profil `mock`, c'est `cerbere-devices-mock` qui traite ce topic, jouant le rôle de la passerelle en plus de celui du device (voir ADR 0021/0023) : le bridge ne fait aucune différence.
+
+### Devices en attente d'appairage
+
+Tout message reçu sur `<base-topic>/+` dont le `friendly_name` ne correspond à aucun device connu du miroir local est enregistré comme **candidat à l'appairage** (`DiscoveredDevice`), et non plus ignoré. Son type est inféré de la forme du payload (`contact` → CONTACT, `occupancy` → MOTION, `state` → SIREN) pour guider le choix de la cible. Le sous-topic réservé `<base-topic>/bridge` (API de la passerelle elle-même) est explicitement exclu. Conséquence : **seul un device qui a déjà émis au moins une fois est appairable**.
+
+Un payload illisible ou une erreur inattendue est loggé (niveau ERROR) et ignoré — jamais d'exception qui romprait la connexion MQTT.
 
 ## Contrats par type de device
 
@@ -90,7 +113,7 @@ Mapping (écriture, commande) : `cerbere-devices-bridge` consomme `cerbere.alarm
 
 ## Résilience
 
-Un seul abonnement générique `<base-topic>/+` (un niveau) capture tous les devices sans capter `/set`/`/availability`/`/get`. Tout message dont le `friendly_name` n'est pas un UUID, ou ne correspond à aucun device connu, ou dont le payload est illisible, est loggé (niveau INFO pour "device inconnu", ERROR pour une erreur de traitement inattendue) et ignoré — jamais d'exception qui romprait la connexion MQTT (même principe que `DeviceEventKafkaConsumer` côté `cerbere-devices-mock`, voir ADR 0016).
+Un seul abonnement générique `<base-topic>/+` (un niveau) capture tous les devices sans capter `/set`/`/availability`/`/get`, ni les sous-topics de l'API bridge (`<base-topic>/bridge/...`, trois niveaux ou plus). Un message dont le `friendly_name` ne correspond à aucun device connu n'est pas une erreur : c'est un candidat à l'appairage, enregistré comme tel (voir plus haut et ADR 0023). Un payload illisible ou une erreur de traitement inattendue est loggé (niveau ERROR) et ignoré — jamais d'exception qui romprait la connexion MQTT (même principe de résilience que les consommateurs Kafka, voir ADR 0016).
 
 ## Sources
 

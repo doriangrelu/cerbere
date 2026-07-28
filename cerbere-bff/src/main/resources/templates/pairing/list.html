@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head>
+	<title>Cerbère — Appairage</title>
+</head>
+<body>
+<main>
+	<h4>Appairage</h4>
+	<p>Rattache un device physique détecté sur le réseau Zigbee à un device du registre officiel.
+		L'appairage renomme le <code>friendly_name</code> du device via la passerelle Zigbee2MQTT —
+		le device apparaît comme « Appairé » sur l'écran Devices dès qu'il aura effectivement communiqué.</p>
+
+	<div th:replace="~{fragments/pairing-table :: pairingSection}"></div>
+
+</main>
+</body>
+</html>

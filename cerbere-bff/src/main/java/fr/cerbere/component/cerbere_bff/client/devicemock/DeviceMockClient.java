@@ -2,7 +2,6 @@ package fr.cerbere.component.cerbere_bff.client.devicemock;
 
 import fr.cerbere.shared.dto.devicemock.DeviceEventResponse;
 import fr.cerbere.shared.dto.devicemock.RegisterOrphanSimulatedDeviceRequest;
-import fr.cerbere.shared.dto.devicemock.RenameSimulatedDeviceRequest;
 import fr.cerbere.shared.dto.devicemock.SimulatedDeviceResponse;
 import fr.cerbere.shared.dto.devicemock.TriggerDeviceEventRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +14,9 @@ import java.util.List;
 /**
  * Client REST vers les endpoints {@code /api/devices-mock/*} de
  * {@code cerbere-devices-mock}, utilisé par la section "mode test" du BFF
- * pour piloter les devices simulés. DTOs partagés via
+ * pour piloter les devices simulés. Pas de méthode d'appairage ici : celui-ci
+ * passe exclusivement par {@code cerbere-devices-bridge} (voir
+ * {@code DeviceBridgeClient} et ADR 0023). DTOs partagés via
  * {@code cerbere-shared-kernel} (voir ADR 0010/0013).
  */
 @Component
@@ -44,14 +45,6 @@ public final class DeviceMockClient {
 		return this.devicesMockRestClient.post()
 			.uri("/api/devices-mock")
 			.body(new RegisterOrphanSimulatedDeviceRequest(type, label))
-			.retrieve()
-			.body(SimulatedDeviceResponse.class);
-	}
-
-	public SimulatedDeviceResponse rename(final String id, final String friendlyName) {
-		return this.devicesMockRestClient.post()
-			.uri("/api/devices-mock/{id}/rename", id)
-			.body(new RenameSimulatedDeviceRequest(friendlyName))
 			.retrieve()
 			.body(SimulatedDeviceResponse.class);
 	}

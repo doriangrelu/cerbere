@@ -11,7 +11,7 @@
 			<th>Appairage</th>
 			<th>Auto</th>
 			<th>État courant</th>
-			<th>Déclencher / Apparier</th>
+			<th>Déclencher</th>
 		</tr>
 		</thead>
 		<tbody>
@@ -20,12 +20,12 @@
 			<td class="upper" th:text="${device.label()}"></td>
 			<td>
 				<span class="chip small" th:classappend="${device.bound()} ? 'primary' : 'surface-variant'"
-					  th:text="${device.bound()} ? 'Lié' : 'Orphelin'"></span>
+					  th:text="${device.bound()} ? 'Apparié' : 'Non apparié'"></span>
 			</td>
 			<td th:text="${device.autoSimulate()} ? 'Oui' : 'Non'"></td>
 			<td th:text="${device.currentState()}"></td>
 			<td>
-				<form th:if="${device.bound()}" class="row" th:hx-post="@{/test-mode/devices/{id}/events(id=${device.id()})}"
+				<form class="row" th:hx-post="@{/test-mode/devices/{id}/events(id=${device.id()})}"
 					  hx-target="#simulated-device-table" hx-swap="outerHTML">
 					<div class="field label border small round suffix" th:if="${device.type() == 'CONTACT'}">
 						<select name="state">
@@ -55,20 +55,6 @@
 						<i>bolt</i>
 					</button>
 				</form>
-				<form th:unless="${device.bound()}" class="row" th:hx-post="@{/test-mode/devices/{id}/rename(id=${device.id()})}"
-					  hx-target="#simulated-device-table" hx-swap="outerHTML">
-					<div class="field label border small round suffix">
-						<select name="coreDeviceId" required>
-							<option th:each="target : ${unboundDevices}" th:value="${target.id()}"
-									class="upper" th:text="${target.label()} + ' (' + ${target.type()} + ')'"></option>
-						</select>
-						<label>Apparier à</label>
-						<i>arrow_drop_down</i>
-					</div>
-					<button class="small circle transparent" type="submit" th:disabled="${#lists.isEmpty(unboundDevices)}">
-						<i>link</i>
-					</button>
-				</form>
 			</td>
 		</tr>
 		<tr th:if="${#lists.isEmpty(simulatedDevices)}">
@@ -81,7 +67,9 @@
 
 	<article>
 		<h6>Créer un device brut (orphelin)</h6>
-		<p>Simule un device Zigbee2MQTT fraîchement appairé (parle MQTT comme du matériel réel), avant appairage à un device du registre officiel.</p>
+		<p>Simule un device Zigbee2MQTT fraîchement appairé : il émet sur MQTT comme du matériel réel, mais n'est
+			rattaché à aucun device du registre officiel. Déclenchez un état pour qu'il se signale, puis rattachez-le
+			depuis l'écran <a href="/pairing">Appairage</a>.</p>
 		<form hx-post="/test-mode/devices" hx-target="#simulated-device-table" hx-swap="outerHTML">
 			<div class="field label border suffix">
 				<select name="type" required>

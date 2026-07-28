@@ -11,10 +11,12 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Connexion au broker MQTT (le même Mosquitto que {@code cerbere-devices-bridge})
- * et abonnement à {@code <base-topic>/+/set} : le Mock ne publie que son propre
- * état (via {@code MqttStatePublisher}) et n'a besoin d'écouter que les
- * commandes qui lui sont adressées (voir ADR 0021). {@code cleanStart=false} :
- * conserve la session/les abonnements entre deux redémarrages du mock côté broker.
+ * et deux abonnements, correspondant aux deux rôles que joue le Mock (voir
+ * ADR 0021/0023) : {@code <base-topic>/+/set} pour les commandes adressées au
+ * device lui-même, et {@code <base-topic>/bridge/request/device/rename} pour les
+ * requêtes d'appairage, que la vraie passerelle Zigbee2MQTT traiterait.
+ * {@code cleanStart=false} : conserve la session/les abonnements entre deux
+ * redémarrages du mock côté broker.
  */
 @Configuration(proxyBeanMethods = false)
 public final class MqttClientConfig {
@@ -35,6 +37,7 @@ public final class MqttClientConfig {
 		client.connect(options);
 
 		client.subscribe(baseTopic + "/+/set", QOS);
+		client.subscribe(baseTopic + "/bridge/request/device/rename", QOS);
 		return client;
 	}
 }

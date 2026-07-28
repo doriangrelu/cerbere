@@ -48,6 +48,10 @@ public final class UseCaseConfig {
 		return new ListSimulatedDevicesService(simulatedDeviceRepository);
 	}
 
+	/**
+	 * Appairage : déclenché par une requête MQTT du Bridge (voir ADR 0023), plus
+	 * par une API REST du Mock.
+	 */
 	@Bean
 	public RenameSimulatedDeviceUseCase renameSimulatedDeviceUseCase(final SimulatedDeviceRepository simulatedDeviceRepository) {
 		return new RenameSimulatedDeviceService(simulatedDeviceRepository);

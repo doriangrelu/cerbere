@@ -6,6 +6,7 @@ import fr.cerbere.component.cerbere_devices_bridge.domain.model.DeviceState;
 import fr.cerbere.component.cerbere_devices_bridge.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_bridge.domain.model.MotionState;
 import fr.cerbere.component.cerbere_devices_bridge.domain.model.SirenState;
+import fr.cerbere.component.cerbere_devices_bridge.domain.port.in.RecordDiscoveredDeviceUseCase;
 import fr.cerbere.component.cerbere_devices_bridge.domain.port.in.ReportDeviceStateUseCase;
 import fr.cerbere.component.cerbere_devices_bridge.domain.port.out.BridgedDeviceRepository;
 import fr.cerbere.component.cerbere_devices_bridge.infrastructure.messaging.mqtt.payload.ContactSensorPayload;
@@ -22,37 +23,49 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**
  * Reçoit chaque message publié par Zigbee2MQTT sur {@code <base-topic>/+} (un
  * device par topic, voir docs/architecture/mqtt-zigbee-contracts.md). Le
- * {@code friendly_name} du topic EST l'UUID du device (voir ADR 0004/0016,
- * même principe de corrélation que `cerbere-devices-mock`) : lit
- * {@link BridgedDeviceRepository} directement (comme {@code DeviceSimulationScheduler}
- * le fait déjà côté mock) pour connaître le type avant de choisir le bon payload,
- * puis délègue à {@link ReportDeviceStateUseCase}. Résilient : device inconnu,
- * friendly_name non-UUID, ou payload illisible → log et ignore, jamais d'exception
- * qui romprait la connexion MQTT.
+ * {@code friendly_name} du topic EST l'UUID du device une fois apparié (voir
+ * ADR 0004/0016) : si le miroir local le connaît, l'état est rapporté via
+ * {@link ReportDeviceStateUseCase}. Sinon, le device est enregistré comme
+ * candidat à l'appairage ({@link RecordDiscoveredDeviceUseCase}, voir ADR 0023) —
+ * un device qui parle sans être connu est précisément ce qu'on veut proposer à
+ * l'écran Appairage, plutôt que de l'ignorer. Résilient : payload illisible ou
+ * erreur inattendue → log et ignore, jamais d'exception qui romprait la
+ * connexion MQTT.
  */
 @Component
 public final class ZigbeeDeviceStateMqttListener implements MqttCallback {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZigbeeDeviceStateMqttListener.class);
 
+	/**
+	 * Sous-topic réservé à l'API de la passerelle elle-même (état, logs, liste
+	 * des devices) : jamais un device, ne doit pas polluer les candidats à l'appairage.
+	 */
+	private static final String BRIDGE_RESERVED_NAME = "bridge";
+
 	private final BridgedDeviceRepository bridgedDeviceRepository;
 	private final ReportDeviceStateUseCase reportDeviceStateUseCase;
+	private final RecordDiscoveredDeviceUseCase recordDiscoveredDeviceUseCase;
 	private final ObjectMapper objectMapper;
 	private final String baseTopic;
 
 	public ZigbeeDeviceStateMqttListener(final BridgedDeviceRepository bridgedDeviceRepository,
 										  final ReportDeviceStateUseCase reportDeviceStateUseCase,
+										  final RecordDiscoveredDeviceUseCase recordDiscoveredDeviceUseCase,
 										  @Qualifier("objectMapper") final ObjectMapper objectMapper,
 										  @Value("${cerbere.devices-bridge.mqtt.base-topic}") final String baseTopic) {
 		this.bridgedDeviceRepository = bridgedDeviceRepository;
 		this.reportDeviceStateUseCase = reportDeviceStateUseCase;
+		this.recordDiscoveredDeviceUseCase = recordDiscoveredDeviceUseCase;
 		this.objectMapper = objectMapper;
 		this.baseTopic = baseTopic;
 	}
@@ -60,20 +73,53 @@ public final class ZigbeeDeviceStateMqttListener implements MqttCallback {
 	@Override
 	public void messageArrived(final String topic, final MqttMessage message) {
 		final String friendlyName = topic.substring(this.baseTopic.length() + 1);
+		if (BRIDGE_RESERVED_NAME.equals(friendlyName)) {
+			return;
+		}
 		try {
-			final UUID deviceId = UUID.fromString(friendlyName);
-			final BridgedDevice device = this.bridgedDeviceRepository.findById(deviceId).orElse(null);
+			final BridgedDevice device = this.findBridgedDevice(friendlyName);
 			if (device == null) {
-				LOGGER.info("Ignoring MQTT message for unknown bridged device {}", friendlyName);
+				this.recordDiscoveredDeviceUseCase.record(friendlyName, this.inferType(message.getPayload()));
 				return;
 			}
 			final DeviceState state = this.parseState(device.getType(), message.getPayload());
-			this.reportDeviceStateUseCase.report(deviceId, state);
-		} catch (final IllegalArgumentException exception) {
-			LOGGER.info("Ignoring MQTT message on topic {}: friendly_name is not a Cerbère UUID", topic);
+			this.reportDeviceStateUseCase.report(device.getId(), state);
 		} catch (final RuntimeException exception) {
 			LOGGER.error("Failed to process MQTT message on topic {}: {}", topic, exception.getMessage());
 		}
+	}
+
+	/**
+	 * Retrouve le device apparié correspondant au {@code friendly_name}, ou
+	 * {@code null} si le nom n'est pas un UUID Cerbère ou n'est connu d'aucun miroir.
+	 */
+	private BridgedDevice findBridgedDevice(final String friendlyName) {
+		final UUID deviceId;
+		try {
+			deviceId = UUID.fromString(friendlyName);
+		} catch (final IllegalArgumentException exception) {
+			return null;
+		}
+		return this.bridgedDeviceRepository.findById(deviceId).orElse(null);
+	}
+
+	/**
+	 * Devine le type d'un device inconnu à la forme de son payload, pour aider
+	 * l'usager à choisir la bonne cible d'appairage. {@code null} si indéterminable.
+	 */
+	private DeviceType inferType(final byte[] payload) {
+		final Map<String, Object> fields = this.objectMapper.readValue(payload, new TypeReference<Map<String, Object>>() {
+		});
+		if (fields.containsKey("contact")) {
+			return DeviceType.CONTACT;
+		}
+		if (fields.containsKey("occupancy")) {
+			return DeviceType.MOTION;
+		}
+		if (fields.containsKey("state")) {
+			return DeviceType.SIREN;
+		}
+		return null;
 	}
 
 	private DeviceState parseState(final DeviceType type, final byte[] payload) {
