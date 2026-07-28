@@ -1,18 +1,17 @@
 package fr.cerbere.component.cerbere_core.application.usecase.alarm;
 
-import fr.cerbere.component.cerbere_core.domain.event.AlarmStateChanged;
 import fr.cerbere.component.cerbere_core.domain.event.AlertRaised;
 import fr.cerbere.component.cerbere_core.domain.event.AlertSeverity;
+import fr.cerbere.component.cerbere_core.domain.event.DeviceSupervisionChanged;
 import fr.cerbere.component.cerbere_core.domain.model.AlarmMode;
 import fr.cerbere.component.cerbere_core.domain.model.AlarmSystem;
 import fr.cerbere.component.cerbere_core.domain.model.Device;
 import fr.cerbere.component.cerbere_core.domain.model.DeviceEventReport;
-import fr.cerbere.component.cerbere_core.application.service.RecomputeZoneViolationService;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.HandleDeviceEventUseCase;
-import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmStateChangedPublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmSystemRepository;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlertPublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceRepository;
+import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceSupervisionChangedPublisher;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,13 +22,19 @@ import java.util.UUID;
 /**
  * Évalue chaque événement de device rapporté : ignoré si le device est inconnu
  * du registre officiel (ex : {@code cerbere-devices-mock} pas encore aligné, ou
- * device supprimé depuis — voir ADR 0016), si le système est désarmé, si le
- * device est désactivé, ou si l'événement ne constitue pas une violation compte
- * tenu du mode d'armement (voir {@link fr.cerbere.component.cerbere_core.domain.model.ArmingMode}
- * pour la différence AWAY/HOME). Déclenche l'alarme et lève une alerte sinon.
+ * device supprimé depuis — voir ADR 0016). Sinon, l'état de violation du device
+ * est mis à jour selon le mode d'armement courant (voir
+ * {@link fr.cerbere.component.cerbere_core.domain.model.ArmingMode} pour la
+ * différence AWAY/HOME) et une alerte est levée si la violation compte
+ * réellement (système armé, device actif).
  * Marque le device {@code linked} au premier événement accepté (voir ADR 0022) :
  * c'est la seule preuve fiable qu'un device physique/simulé communique
  * effectivement sous cet id, jamais réinitialisée ensuite.
+ * <p>
+ * Le déclenchement de l'alarme n'est pas décidé ici : ce use-case émet
+ * {@link DeviceSupervisionChanged} après avoir enregistré le device, et
+ * {@code ReevaluateAlarmStateService} en dérive l'état d'alarme — même chemin
+ * que pour la supervision de vie ou la réactivation d'un device (voir ADR 0025).
  */
 @RequiredArgsConstructor
 public final class HandleDeviceEventService implements HandleDeviceEventUseCase {
@@ -42,9 +47,8 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
 
     private final AlarmSystemRepository alarmSystemRepository;
     private final DeviceRepository deviceRepository;
-    private final AlarmStateChangedPublisher alarmStateChangedPublisher;
     private final AlertPublisher alertPublisher;
-    private final RecomputeZoneViolationService recomputeZoneViolationService;
+    private final DeviceSupervisionChangedPublisher supervisionChangedPublisher;
 
     @Override
     public void handle(final DeviceEventReport report) {
@@ -72,9 +76,6 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
             return;
         }
 
-        if (!alarmSystem.isTriggered()) {
-            this.triggerAlarm(alarmSystem);
-        }
         this.raiseAlert(device, report);
     }
 
@@ -83,7 +84,7 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
         final Device withLastSeenAt = withState.withLastSeenAt(occurredAt);
         final Device current = withLastSeenAt.isLinked() ? withLastSeenAt : withLastSeenAt.withLinked();
         final Device saved = this.deviceRepository.save(current);
-        this.recomputeZoneViolationService.recompute(saved.getZoneId());
+        this.supervisionChangedPublisher.publish(DeviceSupervisionChanged.forDevice(saved.getId(), saved.getZoneId()));
         return saved;
     }
 
@@ -97,14 +98,6 @@ public final class HandleDeviceEventService implements HandleDeviceEventUseCase 
             case MOTION_DETECTED -> Boolean.TRUE.equals(report.payload().get("detected"));
             default -> false;
         };
-    }
-
-    private void triggerAlarm(final AlarmSystem alarmSystem) {
-        final AlarmSystem triggered = alarmSystem.trigger();
-        this.alarmSystemRepository.save(triggered);
-        final AlarmStateChanged event = new AlarmStateChanged(
-                triggered.getId(), alarmSystem.getMode(), triggered.getMode(), true, Instant.now(), UUID.randomUUID());
-        this.alarmStateChangedPublisher.publish(event);
     }
 
     private void raiseAlert(final Device device, final DeviceEventReport report) {

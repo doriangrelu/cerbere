@@ -1,7 +1,6 @@
 package fr.cerbere.component.cerbere_core.application.usecase.device;
 
-import fr.cerbere.component.cerbere_core.application.service.AlarmTriggerReevaluationService;
-import fr.cerbere.component.cerbere_core.application.service.RecomputeZoneViolationService;
+import fr.cerbere.component.cerbere_core.domain.event.DeviceSupervisionChanged;
 import fr.cerbere.component.cerbere_core.domain.event.DeviceUpdated;
 import fr.cerbere.component.cerbere_core.domain.exception.DeviceNotFoundException;
 import fr.cerbere.component.cerbere_core.domain.exception.DuplicateDeviceLabelException;
@@ -9,30 +8,33 @@ import fr.cerbere.component.cerbere_core.domain.model.Device;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.UpdateDeviceUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DevicePublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceRepository;
+import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceSupervisionChangedPublisher;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
  * Implémentation du use-case de modification d'un device. Publie {@link DeviceUpdated}
- * pour que {@code cerbere-devices-mock} garde son miroir aligné — voir ADR 0016.
- * Si {@code zoneId} change, recalcule l'état {@code violation} de l'ancienne
- * et de la nouvelle zone (un device en violation peut en quitter ou en rejoindre
- * une — voir ADR 0017). Un device peut rester en violation pendant qu'il est
- * désactivé (supervision continue, voir {@code HandleDeviceEventService}) sans
- * jamais déclencher l'alarme tant qu'il est inactif ; sa réactivation doit donc
- * réévaluer le déclenchement — sans quoi une violation déjà connue passerait
- * inaperçue jusqu'au prochain événement.
+ * pour que {@code cerbere-devices-bridge} garde son miroir aligné — voir ADR 0016.
+ * <p>
+ * Une modification peut changer la donne pour l'alarme de deux façons : le device
+ * change de zone (l'ancienne comme la nouvelle doivent être recalculées, voir
+ * ADR 0017), ou le device est réactivé alors qu'il était resté en violation
+ * pendant qu'il était inactif — un device désactivé reste supervisé (voir
+ * {@code HandleDeviceEventService}) sans jamais déclencher l'alarme tant qu'il
+ * est inactif, sa réactivation doit donc réévaluer le déclenchement. Plutôt que
+ * de distinguer ces cas ici, le use-case émet systématiquement
+ * {@link DeviceSupervisionChanged} avec l'ancienne et la nouvelle zone :
+ * {@code ReevaluateAlarmStateService} est seul juge des conséquences, et sa
+ * réévaluation est idempotente (voir ADR 0025).
  */
 @RequiredArgsConstructor
 public final class UpdateDeviceService implements UpdateDeviceUseCase {
 
 	private final DeviceRepository deviceRepository;
 	private final DevicePublisher publisher;
-	private final RecomputeZoneViolationService recomputeZoneViolationService;
-	private final AlarmTriggerReevaluationService alarmTriggerReevaluationService;
+	private final DeviceSupervisionChangedPublisher supervisionChangedPublisher;
 
 	@Override
 	public Device update(final UUID id, final String label, final UUID zoneId, final boolean enabled) {
@@ -51,13 +53,8 @@ public final class UpdateDeviceService implements UpdateDeviceUseCase {
 		}
 		final Device saved = this.deviceRepository.save(updated);
 		this.publisher.publish(new DeviceUpdated(saved.getId(), saved.getLabel(), saved.getZoneId(), Instant.now(), UUID.randomUUID()));
-		this.recomputeZoneViolationService.recompute(previousZoneId);
-		if (!Objects.equals(previousZoneId, saved.getZoneId())) {
-			this.recomputeZoneViolationService.recompute(saved.getZoneId());
-		}
-		if (!wasEnabled && enabled) {
-			this.alarmTriggerReevaluationService.reevaluate();
-		}
+		this.supervisionChangedPublisher.publish(
+			DeviceSupervisionChanged.forDevice(saved.getId(), previousZoneId, saved.getZoneId()));
 		return saved;
 	}
 }

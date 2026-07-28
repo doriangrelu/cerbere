@@ -19,9 +19,12 @@ infrastructure/
   messaging/kafka/producer/   implémentations des ports out via KafkaTemplate
   messaging/kafka/consumer/   @KafkaListener, traduisent le message Kafka en appel de use-case
   messaging/event/            DTO/enveloppe Kafka (records Jackson) + (dé)sérialisation
+  messaging/spring/           implémentations des ports out via ApplicationEventPublisher (bus interne)
   client/                     adapters RestClient vers d'autres services, si nécessaire
 adapter/
   in/web/       contrôleurs REST, DTO request/response, mappers vers/depuis le domaine
+  in/scheduler/ jobs @Scheduled, traduisent un tick en appel de use-case
+  in/event/     @EventListener sur le bus applicatif Spring, traduisent un événement interne en appel de use-case
   config/       @Configuration Spring (security, kafka, mongo, scheduling, wiring des beans de port)
 ```
 
@@ -53,6 +56,19 @@ Un module simple avec seulement 2-3 use-cases au total (ex : `cerbere-devices-mo
 Un port `port/in/*UseCase` est un **driving port** : quelque chose qu'un adapter (contrôleur REST, `@KafkaListener`, scheduler) invoque directement. Toute logique applicative qui n'est jamais appelée que par une *autre* classe `application` — typiquement pour maintenir un invariant suite à l'effet de bord d'un vrai use-case (ex : recalculer l'état d'un agrégat voisin) — n'est **pas** un use-case et ne doit pas vivre dans `application.usecase` ni prétendre implémenter un `port/in` (voir ADR 0018). Ces collaborateurs vivent dans `application.service`, restent des classes concrètes `final` sans interface (le layer applicatif ne franchit pas la frontière du hexagone en se dépendant lui-même), et sont câblés dans une configuration Spring dédiée (`ApplicationServiceConfig`, distincte de `UseCaseConfig`).
 
 Test rapide pour trancher : *"un adapter appelle-t-il ça directement ?"* — oui → `application.usecase` + `port/in`. Non, seulement une autre classe `application` → `application.service`, pas de port.
+
+## Conséquences transverses : événement interne, pas appel en cascade
+
+Quand plusieurs use-cases doivent déclencher **la même suite de conséquences** après avoir modifié un agrégat (recalculer un agrégat voisin, réévaluer un état global), ne pas leur faire appeler eux-mêmes les collaborateurs concernés : chacun devrait alors connaître la liste complète des conséquences, et un cinquième chemin ajouté plus tard pourrait l'oublier sans que rien ne le signale.
+
+Le use-case **émet un fait** (`domain.event`) via un port de sortie ; un unique `@EventListener` (`adapter/in/event`) pilote un `port/in` qui détient toute la chaîne de conséquences. Voir [ADR 0025](../adr/0025-evenement-interne-reevaluation-alarme.md) pour l'application à la réévaluation de l'état d'alarme.
+
+Règles associées :
+
+- **Jamais d'`ApplicationEventPublisher` dans `application`** : passer par un port de sortie (`*Publisher`) implémenté dans `infrastructure/messaging/spring`, exactement comme pour Kafka. Aucun type framework dans la couche application (ADR 0001).
+- **Distinguer événement interne et événement Kafka.** Un événement qui ne quitte pas le process n'a ni `eventId` ni `occurredAt` : ce n'est pas un fait historisable, c'est un signal de cohérence. Le dire explicitement dans sa JavaDoc, sinon on finira par le publier sur un topic.
+- **Synchrone, sans `try/catch`.** Pas d'`@Async` : la conséquence doit être appliquée avant que l'appelant ne rende la main. Et un échec doit remonter — c'est l'inverse de la résilience des consumers Kafka, qui eux ne doivent jamais bloquer le flux entrant.
+- **Rendre la conséquence idempotente et inconditionnelle**, pour que l'émetteur n'ait pas à juger si son changement « mérite » un recalcul. C'est ce qui permet de supprimer les conditions dispersées chez les appelants.
 
 ## Cas particuliers
 

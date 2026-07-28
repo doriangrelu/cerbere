@@ -1,13 +1,13 @@
 package fr.cerbere.component.cerbere_core.application.usecase.device;
 
-import fr.cerbere.component.cerbere_core.application.service.AlarmTriggerReevaluationService;
-import fr.cerbere.component.cerbere_core.application.service.RecomputeZoneViolationService;
 import fr.cerbere.component.cerbere_core.domain.event.AlertRaised;
 import fr.cerbere.component.cerbere_core.domain.event.AlertSeverity;
+import fr.cerbere.component.cerbere_core.domain.event.DeviceSupervisionChanged;
 import fr.cerbere.component.cerbere_core.domain.model.Device;
 import fr.cerbere.component.cerbere_core.domain.port.in.device.CheckDeviceHeartbeatsUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlertPublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceRepository;
+import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceSupervisionChangedPublisher;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -17,31 +17,32 @@ import java.util.UUID;
  * Implémentation de la supervision de vie (voir ADR 0020, restreinte aux devices
  * appairés par ADR 0022). Un device actif, déjà appairé ({@code linked}) et pas
  * déjà en violation dont {@code lastSeenAt} dépasse le délai configuré est
- * marqué en violation (même état que pour une vraie violation capteur, la
- * zone/l'alarme sont recalculées de la même façon), et une alerte dédiée est
- * levée. Un device jamais appairé est ignoré : il n'a jamais eu l'occasion de
- * communiquer, ce n'est pas une violation, seulement une provision en attente
- * (voir ADR 0022). Un device déjà en violation n'est pas retraité à chaque
- * passage du scheduler (évite de relever une alerte en boucle) — il redevient
- * supervisé normalement dès qu'un nouvel événement le fait ressortir de la
- * violation (voir {@code HandleDeviceEventService}).
+ * marqué en violation (même état que pour une vraie violation capteur), et une
+ * alerte dédiée est levée. Un device jamais appairé est ignoré : il n'a jamais
+ * eu l'occasion de communiquer, ce n'est pas une violation, seulement une
+ * provision en attente (voir ADR 0022). Un device déjà en violation n'est pas
+ * retraité à chaque passage du scheduler (évite de relever une alerte en
+ * boucle) — il redevient supervisé normalement dès qu'un nouvel événement le
+ * fait ressortir de la violation (voir {@code HandleDeviceEventService}).
+ * <p>
+ * Ce use-case ne décide que d'une chose : ce device donne-t-il encore signe de
+ * vie. Les conséquences sur la zone et sur le déclenchement de l'alarme ne sont
+ * pas de son ressort : il émet {@link DeviceSupervisionChanged} et c'est
+ * {@code ReevaluateAlarmStateService} qui en dérive l'état (voir ADR 0025).
  */
 public final class CheckDeviceHeartbeatsService implements CheckDeviceHeartbeatsUseCase {
 
 	private final DeviceRepository deviceRepository;
-	private final RecomputeZoneViolationService recomputeZoneViolationService;
-	private final AlarmTriggerReevaluationService alarmTriggerReevaluationService;
+	private final DeviceSupervisionChangedPublisher supervisionChangedPublisher;
 	private final AlertPublisher alertPublisher;
 	private final Duration timeout;
 
 	public CheckDeviceHeartbeatsService(final DeviceRepository deviceRepository,
-										 final RecomputeZoneViolationService recomputeZoneViolationService,
-										 final AlarmTriggerReevaluationService alarmTriggerReevaluationService,
+										 final DeviceSupervisionChangedPublisher supervisionChangedPublisher,
 										 final AlertPublisher alertPublisher,
 										 final Duration timeout) {
 		this.deviceRepository = deviceRepository;
-		this.recomputeZoneViolationService = recomputeZoneViolationService;
-		this.alarmTriggerReevaluationService = alarmTriggerReevaluationService;
+		this.supervisionChangedPublisher = supervisionChangedPublisher;
 		this.alertPublisher = alertPublisher;
 		this.timeout = timeout;
 	}
@@ -63,8 +64,7 @@ public final class CheckDeviceHeartbeatsService implements CheckDeviceHeartbeats
 
 	private void markUnreachable(final Device device, final Instant now) {
 		final Device saved = this.deviceRepository.save(device.withViolation());
-		this.recomputeZoneViolationService.recompute(saved.getZoneId());
-		this.alarmTriggerReevaluationService.reevaluate();
+		this.supervisionChangedPublisher.publish(DeviceSupervisionChanged.forDevice(saved.getId(), saved.getZoneId()));
 		final AlertRaised alert = new AlertRaised(
 			UUID.randomUUID(),
 			saved.getZoneId(),

@@ -2,17 +2,21 @@ package fr.cerbere.component.cerbere_core.application.usecase.device;
 
 import fr.cerbere.component.cerbere_core.application.service.AlarmTriggerReevaluationService;
 import fr.cerbere.component.cerbere_core.application.service.RecomputeZoneViolationService;
+import fr.cerbere.component.cerbere_core.application.usecase.alarm.ReevaluateAlarmStateService;
 import fr.cerbere.component.cerbere_core.domain.event.AlarmStateChanged;
 import fr.cerbere.component.cerbere_core.domain.event.AlertRaised;
+import fr.cerbere.component.cerbere_core.domain.event.DeviceSupervisionChanged;
 import fr.cerbere.component.cerbere_core.domain.model.AlarmSystem;
 import fr.cerbere.component.cerbere_core.domain.model.ArmingMode;
 import fr.cerbere.component.cerbere_core.domain.model.Device;
 import fr.cerbere.component.cerbere_core.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_core.domain.model.Zone;
+import fr.cerbere.component.cerbere_core.domain.port.in.alarm.ReevaluateAlarmStateUseCase;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmStateChangedPublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlarmSystemRepository;
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlertPublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceRepository;
+import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceSupervisionChangedPublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.zone.ZoneRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,8 +58,10 @@ class CheckDeviceHeartbeatsServiceTest {
 			new RecomputeZoneViolationService(this.zoneRepository, this.deviceRepository);
 		final AlarmTriggerReevaluationService alarmTriggerReevaluationService =
 			new AlarmTriggerReevaluationService(this.deviceRepository, this.alarmSystemRepository, this.alarmStateChangedPublisher);
+		final ReevaluateAlarmStateUseCase reevaluateAlarmStateUseCase =
+			new ReevaluateAlarmStateService(recomputeZoneViolationService, alarmTriggerReevaluationService);
 		this.service = new CheckDeviceHeartbeatsService(
-			this.deviceRepository, recomputeZoneViolationService, alarmTriggerReevaluationService, this.alertPublisher, TIMEOUT
+			this.deviceRepository, new SynchronousSupervisionChangedPublisher(reevaluateAlarmStateUseCase), this.alertPublisher, TIMEOUT
 		);
 	}
 
@@ -219,6 +225,22 @@ class CheckDeviceHeartbeatsServiceTest {
 		@Override
 		public Optional<AlarmSystem> findById(final String systemId) {
 			return Optional.ofNullable(this.systems.get(systemId));
+		}
+	}
+
+	/**
+	 * Rejoue le bus applicatif Spring de façon synchrone, comme le fait
+	 * {@code DeviceSupervisionChangedListener} en production : les tests
+	 * vérifient ainsi la chaîne complète « device muet → violation → alarme »
+	 * sans contexte Spring.
+	 */
+	private record SynchronousSupervisionChangedPublisher(
+		ReevaluateAlarmStateUseCase reevaluateAlarmStateUseCase
+	) implements DeviceSupervisionChangedPublisher {
+
+		@Override
+		public void publish(final DeviceSupervisionChanged event) {
+			this.reevaluateAlarmStateUseCase.reevaluate(event);
 		}
 	}
 
