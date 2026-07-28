@@ -17,7 +17,7 @@ public final class SimulatedDeviceWebMapper {
 			device.getType().name(),
 			device.getLabel(),
 			device.getFriendlyName(),
-			device.isAutoSimulate(),
+			device.isOnline(),
 			device.getCurrentState().name()
 		);
 	}

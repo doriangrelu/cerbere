@@ -3,7 +3,7 @@ package fr.cerbere.component.cerbere_devices_mock.domain.model;
 /**
  * Type de device simulé pour la V1 de Cerbère : contact porte/fenêtre,
  * détecteur de mouvement, sirène. Chaque type sait quel {@link DeviceState}
- * il accepte, son état initial, et comment tirer/parser un état.
+ * il accepte, son état initial (l'état « tout va bien »), et comment parser un état.
  */
 public enum DeviceType {
 
@@ -29,17 +29,6 @@ public enum DeviceType {
 			case CONTACT -> state instanceof ContactState;
 			case MOTION -> state instanceof MotionState;
 			case SIREN -> state instanceof SirenState;
-		};
-	}
-
-	/**
-	 * Tire un état aléatoire compatible avec ce type, utilisé par le scheduler de simulation.
-	 */
-	public DeviceState randomState() {
-		return switch (this) {
-			case CONTACT -> ContactState.random();
-			case MOTION -> MotionState.random();
-			case SIREN -> SirenState.random();
 		};
 	}
 

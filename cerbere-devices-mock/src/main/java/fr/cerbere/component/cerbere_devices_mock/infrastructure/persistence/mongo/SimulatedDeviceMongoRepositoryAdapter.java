@@ -44,8 +44,8 @@ public class SimulatedDeviceMongoRepositoryAdapter implements SimulatedDeviceRep
 	}
 
 	@Override
-	public List<SimulatedDevice> findByAutoSimulateTrue() {
-		return this.mongoRepository.findByAutoSimulate(true).stream()
+	public List<SimulatedDevice> findByOnlineTrue() {
+		return this.mongoRepository.findByOnline(true).stream()
 			.map(SimulatedDeviceMapper::toDomain)
 			.toList();
 	}

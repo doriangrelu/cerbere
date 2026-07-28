@@ -19,7 +19,7 @@ public interface SimulatedDeviceRepository {
 
 	List<SimulatedDevice> findAll();
 
-	List<SimulatedDevice> findByAutoSimulateTrue();
+	List<SimulatedDevice> findByOnlineTrue();
 
 	void deleteById(UUID id);
 }

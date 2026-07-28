@@ -2,28 +2,21 @@ package fr.cerbere.component.cerbere_devices_mock.application.usecase;
 
 import fr.cerbere.component.cerbere_devices_mock.domain.event.DeviceEventOccurred;
 import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceNotFoundException;
+import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceOfflineException;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.ContactState;
-import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceState;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.out.DeviceStatePublisher;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.out.SimulatedDeviceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Tests unitaires purs (aucun contexte Spring) du service central de publication
- * d'événements, exercé aussi bien par le chemin manuel que par le chemin simulé.
+ * Tests unitaires purs (aucun contexte Spring) du déclenchement manuel d'un
+ * état sur un device simulé.
  */
 class PublishDeviceEventServiceTest {
 
@@ -40,7 +33,7 @@ class PublishDeviceEventServiceTest {
 
     @Test
     void triggerShouldPublishRequestedStateAndPersistIt() {
-        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte d'entrée", false));
+        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte d'entrée"));
 
         final DeviceEventOccurred event = this.service.trigger(device.getId(), ContactState.OPEN.name());
 
@@ -60,72 +53,32 @@ class PublishDeviceEventServiceTest {
 
     @Test
     void triggerShouldThrowWhenRequestedStateDoesNotBelongToDeviceType() {
-        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte d'entrée", false));
+        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte d'entrée"));
 
         assertThatThrownBy(() -> this.service.trigger(device.getId(), "ACTIVE"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void simulateRandomEventShouldMarkEventAsNotManual() {
-        final SimulatedDevice device = this.repository.save(SimulatedDevice.register(UUID.randomUUID(), DeviceType.MOTION, "Salon", true));
+    void triggerShouldThrowWhenDeviceIsOffline() {
+        final SimulatedDevice device = this.repository.save(
+            SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte d'entrée").withOnline(false)
+        );
 
-        final DeviceEventOccurred event = this.service.simulateRandomEvent(device.getId());
-
-        assertThat(event.triggeredManually()).isFalse();
-        assertThat(this.publisher.publishedStates()).hasSize(1);
+        assertThatThrownBy(() -> this.service.trigger(device.getId(), ContactState.OPEN.name()))
+                .isInstanceOf(DeviceOfflineException.class);
     }
 
-    private record PublishedState(String friendlyName, DeviceType type, DeviceState state) {
-    }
+    @Test
+    void triggerShouldPublishNothingWhenDeviceIsOffline() {
+        final SimulatedDevice device = this.repository.save(
+            SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte d'entrée").withOnline(false)
+        );
 
-    private static final class InMemorySimulatedDeviceRepository implements SimulatedDeviceRepository {
+        assertThatThrownBy(() -> this.service.trigger(device.getId(), ContactState.OPEN.name()))
+                .isInstanceOf(DeviceOfflineException.class);
 
-        private final Map<UUID, SimulatedDevice> devices = new HashMap<>();
-
-        @Override
-        public SimulatedDevice save(final SimulatedDevice device) {
-            this.devices.put(device.getId(), device);
-            return device;
-        }
-
-        @Override
-        public Optional<SimulatedDevice> findById(final UUID id) {
-            return Optional.ofNullable(this.devices.get(id));
-        }
-
-        @Override
-        public Optional<SimulatedDevice> findByFriendlyName(final String friendlyName) {
-            return this.devices.values().stream().filter(device -> device.getFriendlyName().equals(friendlyName)).findFirst();
-        }
-
-        @Override
-        public List<SimulatedDevice> findAll() {
-            return List.copyOf(this.devices.values());
-        }
-
-        @Override
-        public List<SimulatedDevice> findByAutoSimulateTrue() {
-            return this.devices.values().stream().filter(SimulatedDevice::isAutoSimulate).toList();
-        }
-
-        @Override
-        public void deleteById(final UUID id) {
-            this.devices.remove(id);
-        }
-    }
-
-    private static final class RecordingDeviceStatePublisher implements DeviceStatePublisher {
-
-        private final List<PublishedState> states = new ArrayList<>();
-
-        @Override
-        public void publish(final String friendlyName, final DeviceType type, final DeviceState state) {
-            this.states.add(new PublishedState(friendlyName, type, state));
-        }
-
-        List<PublishedState> publishedStates() {
-            return this.states;
-        }
+        assertThat(this.publisher.publishedStates()).isEmpty();
+        assertThat(this.repository.findById(device.getId()).orElseThrow().getCurrentState()).isEqualTo(ContactState.CLOSED);
     }
 }

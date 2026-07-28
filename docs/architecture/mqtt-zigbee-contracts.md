@@ -40,6 +40,12 @@ La passerelle répond sur `<base-topic>/bridge/response/device/rename` (`{"data"
 
 En profil `mock`, c'est `cerbere-devices-mock` qui traite ce topic, jouant le rôle de la passerelle en plus de celui du device (voir ADR 0021/0023) : le bridge ne fait aucune différence.
 
+### Reporting périodique
+
+Un device Zigbee ne parle pas qu'aux changements d'état : il rapporte son état à intervalle régulier. `cerbere-devices-mock` fait de même (voir ADR 0024) — chaque device joignable republie son état courant sur `<base-topic>/<friendly_name>` toutes les `cerbere.devices-mock.heartbeat.fixed-delay-ms` (60 s par défaut), avec exactement les mêmes payloads que ci-dessous. C'est ce qui entretient le `lastSeenAt` de `cerbere-core` et rend sa supervision de vie (ADR 0020) opérante.
+
+Un device simulé « hors réseau » cesse toute émission, sans rien publier pour le signaler : c'est l'absence de nouvelles qui doit être détectée, pas un message d'adieu. Le topic `<base-topic>/<friendly_name>/availability` que publie la vraie passerelle Zigbee2MQTT n'est délibérément ni émis par le Mock ni consommé par le Bridge (voir ADR 0024).
+
 ### Devices en attente d'appairage
 
 Tout message reçu sur `<base-topic>/+` dont le `friendly_name` ne correspond à aucun device connu du miroir local est enregistré comme **candidat à l'appairage** (`DiscoveredDevice`), et non plus ignoré. Son type est inféré de la forme du payload (`contact` → CONTACT, `occupancy` → MOTION, `state` → SIREN) pour guider le choix de la cible. Le sous-topic réservé `<base-topic>/bridge` (API de la passerelle elle-même) est explicitement exclu. Conséquence : **seul un device qui a déjà émis au moins une fois est appairable**.

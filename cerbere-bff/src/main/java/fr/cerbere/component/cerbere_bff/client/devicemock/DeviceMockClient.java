@@ -2,6 +2,7 @@ package fr.cerbere.component.cerbere_bff.client.devicemock;
 
 import fr.cerbere.shared.dto.devicemock.DeviceEventResponse;
 import fr.cerbere.shared.dto.devicemock.RegisterOrphanSimulatedDeviceRequest;
+import fr.cerbere.shared.dto.devicemock.SetDeviceAvailabilityRequest;
 import fr.cerbere.shared.dto.devicemock.SimulatedDeviceResponse;
 import fr.cerbere.shared.dto.devicemock.TriggerDeviceEventRequest;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,14 @@ public final class DeviceMockClient {
 		return this.devicesMockRestClient.post()
 			.uri("/api/devices-mock")
 			.body(new RegisterOrphanSimulatedDeviceRequest(type, label))
+			.retrieve()
+			.body(SimulatedDeviceResponse.class);
+	}
+
+	public SimulatedDeviceResponse setAvailability(final String deviceId, final boolean online) {
+		return this.devicesMockRestClient.put()
+			.uri("/api/devices-mock/{deviceId}/availability", deviceId)
+			.body(new SetDeviceAvailabilityRequest(online))
 			.retrieve()
 			.body(SimulatedDeviceResponse.class);
 	}

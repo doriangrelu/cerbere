@@ -12,7 +12,7 @@ import java.util.Optional;
  */
 public interface SimulatedDeviceMongoRepository extends MongoRepository<SimulatedDeviceDocument, String> {
 
-	List<SimulatedDeviceDocument> findByAutoSimulate(boolean autoSimulate);
+	List<SimulatedDeviceDocument> findByOnline(boolean online);
 
 	Optional<SimulatedDeviceDocument> findByFriendlyName(String friendlyName);
 }

@@ -1,6 +1,7 @@
 package fr.cerbere.component.cerbere_devices_mock.adapter.in.web;
 
 import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceNotFoundException;
+import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceOfflineException;
 import fr.cerbere.component.cerbere_devices_mock.domain.exception.UnsupportedDeviceCommandException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -26,6 +27,14 @@ public final class DevicesMockExceptionHandler {
 	public ProblemDetail handleUnsupportedCommand(final UnsupportedDeviceCommandException exception) {
 		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
 		problemDetail.setTitle("Unsupported device command");
+		return problemDetail;
+	}
+
+	@ExceptionHandler(DeviceOfflineException.class)
+	public ProblemDetail handleDeviceOffline(final DeviceOfflineException exception) {
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+			"Ce device est hors réseau : il ne peut rien émettre tant qu'il n'est pas rebranché.");
+		problemDetail.setTitle("Device offline");
 		return problemDetail;
 	}
 }

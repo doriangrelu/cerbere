@@ -21,7 +21,7 @@ final class SimulatedDeviceMapper {
 			device.getType().name(),
 			device.getLabel(),
 			device.getFriendlyName(),
-			device.isAutoSimulate(),
+			device.isOnline(),
 			state.name(),
 			device.getVersion()
 		);
@@ -35,7 +35,7 @@ final class SimulatedDeviceMapper {
 			type,
 			document.label(),
 			document.friendlyName(),
-			document.autoSimulate(),
+			document.online(),
 			state,
 			document.version()
 		);

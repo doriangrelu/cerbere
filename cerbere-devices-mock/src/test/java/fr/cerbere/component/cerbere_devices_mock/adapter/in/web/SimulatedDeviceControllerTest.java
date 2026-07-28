@@ -4,6 +4,7 @@ import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceType;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.ListSimulatedDevicesUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.RegisterSimulatedDeviceUseCase;
+import fr.cerbere.component.cerbere_devices_mock.domain.port.in.SetDeviceAvailabilityUseCase;
 import fr.cerbere.shared.config.CommonJacksonConfig;
 import fr.cerbere.shared.config.PermitAllSecurityConfig;
 import org.junit.jupiter.api.Test;
@@ -44,13 +45,17 @@ class SimulatedDeviceControllerTest {
     @MockitoBean
     private ListSimulatedDevicesUseCase listSimulatedDevicesUseCase;
 
+    @MockitoBean
+    private SetDeviceAvailabilityUseCase setDeviceAvailabilityUseCase;
+
     @Test
     void listAllShouldReturnRegisteredDevices() throws Exception {
-        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.MOTION, "Salon", true);
+        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.MOTION, "Salon");
         given(this.listSimulatedDevicesUseCase.listAll()).willReturn(List.of(device));
 
         this.mockMvc.perform(get("/api/devices-mock"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].type").value("MOTION"));
+                .andExpect(jsonPath("$[0].type").value("MOTION"))
+                .andExpect(jsonPath("$[0].online").value(true));
     }
 }

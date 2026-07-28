@@ -2,9 +2,9 @@ package fr.cerbere.component.cerbere_devices_mock.application.usecase;
 
 import fr.cerbere.component.cerbere_devices_mock.domain.event.DeviceEventOccurred;
 import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceNotFoundException;
+import fr.cerbere.component.cerbere_devices_mock.domain.exception.DeviceOfflineException;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.DeviceState;
 import fr.cerbere.component.cerbere_devices_mock.domain.model.SimulatedDevice;
-import fr.cerbere.component.cerbere_devices_mock.domain.port.in.SimulateDeviceEventUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.in.TriggerDeviceEventUseCase;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.out.DeviceStatePublisher;
 import fr.cerbere.component.cerbere_devices_mock.domain.port.out.SimulatedDeviceRepository;
@@ -13,17 +13,15 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Service central : que la source soit le scheduler de simulation automatique ou
- * l'API de déclenchement manuel, tout changement d'état d'un device simulé passe
- * par ce service, garantissant un format homogène (voir ADR 0004) — publié sur
- * MQTT avec exactement les mêmes payloads qu'un vrai device Zigbee2MQTT, pour que
+ * Déclenchement manuel d'un état sur un device simulé (API de contrôle du mode
+ * test). L'état devient l'état courant du device, celui qu'il continuera de
+ * rapporter périodiquement jusqu'au prochain déclenchement (voir
+ * {@link EmitDeviceHeartbeatsService} et ADR 0024). Publié sur MQTT avec
+ * exactement les mêmes payloads qu'un vrai device Zigbee2MQTT, pour que
  * {@code cerbere-devices-bridge} le traite sans distinction (voir ADR 0021).
- * Implémente les ports {@link TriggerDeviceEventUseCase} et
- * {@link SimulateDeviceEventUseCase} (suffixe {@code Service} réservé aux
- * implémentations, {@code UseCase} réservé aux interfaces de port — voir
- * docs/best-practices/coding-standards.md).
+ * Un device hors réseau refuse d'émettre : c'est précisément ce qu'on simule.
  */
-public final class PublishDeviceEventService implements TriggerDeviceEventUseCase, SimulateDeviceEventUseCase {
+public final class PublishDeviceEventService implements TriggerDeviceEventUseCase {
 
 	private final SimulatedDeviceRepository simulatedDeviceRepository;
 	private final DeviceStatePublisher deviceStatePublisher;
@@ -36,36 +34,24 @@ public final class PublishDeviceEventService implements TriggerDeviceEventUseCas
 
 	@Override
 	public DeviceEventOccurred trigger(final UUID deviceId, final String requestedStateName) {
-		final SimulatedDevice device = this.findDeviceOrThrow(deviceId);
-		final DeviceState requestedState = device.getType().parseState(requestedStateName);
-		return this.publishStateChange(device, requestedState, true);
-	}
-
-	@Override
-	public DeviceEventOccurred simulateRandomEvent(final UUID deviceId) {
-		final SimulatedDevice device = this.findDeviceOrThrow(deviceId);
-		final DeviceState randomState = device.getType().randomState();
-		return this.publishStateChange(device, randomState, false);
-	}
-
-	private SimulatedDevice findDeviceOrThrow(final UUID deviceId) {
-		return this.simulatedDeviceRepository.findById(deviceId)
+		final SimulatedDevice device = this.simulatedDeviceRepository.findById(deviceId)
 			.orElseThrow(() -> new DeviceNotFoundException(deviceId));
-	}
-
-	private DeviceEventOccurred publishStateChange(final SimulatedDevice device, final DeviceState newState, final boolean triggeredManually) {
-		final SimulatedDevice updatedDevice = device.withState(newState);
+		if (!device.isOnline()) {
+			throw new DeviceOfflineException(deviceId);
+		}
+		final DeviceState requestedState = device.getType().parseState(requestedStateName);
+		final SimulatedDevice updatedDevice = device.withState(requestedState);
 		this.simulatedDeviceRepository.save(updatedDevice);
 
-		this.deviceStatePublisher.publish(updatedDevice.getFriendlyName(), updatedDevice.getType(), newState);
+		this.deviceStatePublisher.publish(updatedDevice.getFriendlyName(), updatedDevice.getType(), requestedState);
 
 		return new DeviceEventOccurred(
 			UUID.randomUUID(),
 			updatedDevice.getId(),
 			updatedDevice.getType(),
-			newState,
+			requestedState,
 			Instant.now(),
-			triggeredManually
+			true
 		);
 	}
 }

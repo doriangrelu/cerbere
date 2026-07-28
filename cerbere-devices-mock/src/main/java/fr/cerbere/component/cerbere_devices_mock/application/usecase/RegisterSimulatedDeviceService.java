@@ -19,8 +19,8 @@ public final class RegisterSimulatedDeviceService implements RegisterSimulatedDe
 	}
 
 	@Override
-	public SimulatedDevice register(final DeviceType type, final String label, final boolean autoSimulate) {
-		final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), type, label, autoSimulate);
+	public SimulatedDevice register(final DeviceType type, final String label) {
+		final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), type, label);
 		return this.simulatedDeviceRepository.save(device);
 	}
 }

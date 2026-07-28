@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -72,6 +73,22 @@ public final class TestModeController {
         return SIMULATED_DEVICE_TABLE_FRAGMENT;
     }
 
+    /**
+     * Branche/débranche le device du réseau simulé : débranché, il cesse toute
+     * émission, ce qui doit finir par le faire marquer injoignable par la
+     * supervision de vie de {@code cerbere-core} (voir ADR 0020/0024).
+     */
+    @PutMapping("/test-mode/devices/{id}/availability")
+    public String setAvailability(@PathVariable final String id, @RequestParam final boolean online, final Model model) {
+        try {
+            this.deviceMockClient.setAvailability(id, online);
+        } catch (final HttpClientErrorException exception) {
+            model.addAttribute(SIMULATED_DEVICE_ERROR_ATTRIBUTE, this.problemDetailMessages.extractDetail(exception));
+        }
+        this.populateModel(model);
+        return SIMULATED_DEVICE_TABLE_FRAGMENT;
+    }
+
     private void populateModel(final Model model) {
         final Map<String, DeviceResponse> coreDevicesById = this.deviceCoreClient.listAll().stream()
                 .collect(Collectors.toMap(DeviceResponse::id, device -> device));
@@ -84,6 +101,6 @@ public final class TestModeController {
     private SimulatedDeviceRow toRow(final SimulatedDeviceResponse device, final Map<String, DeviceResponse> coreDevicesById) {
         final DeviceResponse pairedCoreDevice = coreDevicesById.get(device.friendlyName());
         final boolean linked = pairedCoreDevice != null && pairedCoreDevice.linked();
-        return new SimulatedDeviceRow(device.id(), device.type(), device.label(), device.autoSimulate(), device.currentState(), linked);
+        return new SimulatedDeviceRow(device.id(), device.type(), device.label(), device.online(), device.currentState(), linked);
     }
 }

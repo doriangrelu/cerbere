@@ -9,7 +9,7 @@
 			<th>Type</th>
 			<th>Libellé</th>
 			<th>Appairage</th>
-			<th>Auto</th>
+			<th>Réseau</th>
 			<th>État courant</th>
 			<th>Déclencher</th>
 		</tr>
@@ -22,7 +22,19 @@
 				<span class="chip small" th:classappend="${device.bound()} ? 'primary' : 'surface-variant'"
 					  th:text="${device.bound()} ? 'Apparié' : 'Non apparié'"></span>
 			</td>
-			<td th:text="${device.autoSimulate()} ? 'Oui' : 'Non'"></td>
+			<td>
+				<div class="row">
+					<span class="chip small" th:classappend="${device.online()} ? 'primary' : 'error'"
+						  th:text="${device.online()} ? 'En ligne' : 'Hors réseau'"></span>
+					<button class="small circle transparent"
+							th:hx-put="@{/test-mode/devices/{id}/availability(id=${device.id()})}"
+							th:hx-vals="|{&quot;online&quot;: ${!device.online()}}|"
+							hx-target="#simulated-device-table" hx-swap="outerHTML"
+							th:title="${device.online()} ? 'Débrancher du réseau' : 'Rebrancher au réseau'">
+						<i th:text="${device.online()} ? 'wifi' : 'wifi_off'"></i>
+					</button>
+				</div>
+			</td>
 			<td th:text="${device.currentState()}"></td>
 			<td>
 				<form class="row" th:hx-post="@{/test-mode/devices/{id}/events(id=${device.id()})}"
@@ -51,7 +63,8 @@
 						<label>État</label>
 						<i>arrow_drop_down</i>
 					</div>
-					<button class="small circle transparent" type="submit">
+					<button class="small circle transparent" type="submit" th:disabled="${!device.online()}"
+							th:title="${device.online()} ? 'Déclencher cet état' : 'Device hors réseau : aucune émission possible'">
 						<i>bolt</i>
 					</button>
 				</form>
@@ -70,6 +83,8 @@
 		<p>Simule un device Zigbee2MQTT fraîchement appairé : il émet sur MQTT comme du matériel réel, mais n'est
 			rattaché à aucun device du registre officiel. Déclenchez un état pour qu'il se signale, puis rattachez-le
 			depuis l'écran <a href="/pairing">Appairage</a>.</p>
+		<p>Chaque device en ligne republie ensuite son état courant à intervalle régulier, comme un vrai capteur.
+			Le débrancher du réseau coupe toute émission : de quoi vérifier que l'alarme finit par le signaler injoignable.</p>
 		<form hx-post="/test-mode/devices" hx-target="#simulated-device-table" hx-swap="outerHTML">
 			<div class="field label border suffix">
 				<select name="type" required>

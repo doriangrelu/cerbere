@@ -8,8 +8,9 @@ package fr.cerbere.component.cerbere_bff.adapter.in.web.testmode;
  * officiel dont le {@code friendlyName} MQTT correspond à l'id — seule source
  * de vérité tenue par {@code cerbere-core} (voir ADR 0022) : ne passe à vrai
  * qu'une fois qu'un événement a réellement été accepté, pas au simple renommage.
- * Un device orphelin ({@code !bound}) peut être apparié (renommage de son
- * {@code friendlyName}) à un device officiel non encore lié depuis ce même écran.
+ * Un device orphelin ({@code !bound}) s'apparie depuis l'écran Appairage, pas
+ * ici (voir ADR 0023). {@code online} reflète la joignabilité réseau simulée :
+ * un device débranché n'émet plus rien (voir ADR 0024).
  */
-public record SimulatedDeviceRow(String id, String type, String label, boolean autoSimulate, String currentState, boolean bound) {
+public record SimulatedDeviceRow(String id, String type, String label, boolean online, String currentState, boolean bound) {
 }

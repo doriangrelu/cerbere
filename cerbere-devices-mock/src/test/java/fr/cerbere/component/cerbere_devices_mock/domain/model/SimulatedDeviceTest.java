@@ -14,14 +14,33 @@ class SimulatedDeviceTest {
     void registerShouldDefaultFriendlyNameToId() {
         final UUID id = UUID.randomUUID();
 
-        final SimulatedDevice device = SimulatedDevice.register(id, DeviceType.CONTACT, "Fenêtre cuisine", false);
+        final SimulatedDevice device = SimulatedDevice.register(id, DeviceType.CONTACT, "Fenêtre cuisine");
 
         assertThat(device.getFriendlyName()).isEqualTo(id.toString());
     }
 
     @Test
+    void registerShouldStartOnlineInTheHealthyInitialState() {
+        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine");
+
+        assertThat(device.isOnline()).isTrue();
+        assertThat(device.getCurrentState()).isEqualTo(ContactState.CLOSED);
+    }
+
+    @Test
+    void withOnlineShouldReturnNewInstanceWithoutMutatingOriginal() {
+        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine");
+
+        final SimulatedDevice offline = device.withOnline(false);
+
+        assertThat(device.isOnline()).isTrue();
+        assertThat(offline.isOnline()).isFalse();
+        assertThat(offline.getId()).isEqualTo(device.getId());
+    }
+
+    @Test
     void withStateShouldReturnNewInstanceWithoutMutatingOriginal() {
-        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine", false);
+        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine");
 
         final SimulatedDevice updated = device.withState(ContactState.OPEN);
 
@@ -32,7 +51,7 @@ class SimulatedDeviceTest {
 
     @Test
     void withStateShouldRejectStateFromAnotherDeviceFamily() {
-        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine", false);
+        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine");
 
         assertThatThrownBy(() -> device.withState(SirenState.ACTIVE))
                 .isInstanceOf(UnsupportedDeviceCommandException.class);
@@ -40,7 +59,7 @@ class SimulatedDeviceTest {
 
     @Test
     void withFriendlyNameShouldReturnNewInstanceWithoutMutatingOriginal() {
-        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine", false);
+        final SimulatedDevice device = SimulatedDevice.register(UUID.randomUUID(), DeviceType.CONTACT, "Fenêtre cuisine");
 
         final SimulatedDevice renamed = device.withFriendlyName("some-core-device-uuid");
 

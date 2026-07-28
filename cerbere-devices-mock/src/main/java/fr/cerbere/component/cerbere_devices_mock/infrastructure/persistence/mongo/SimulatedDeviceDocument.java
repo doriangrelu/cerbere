@@ -15,7 +15,7 @@ public record SimulatedDeviceDocument(
 	String type,
 	String label,
 	String friendlyName,
-	boolean autoSimulate,
+	boolean online,
 	String state,
 	@Version Long version
 ) {
