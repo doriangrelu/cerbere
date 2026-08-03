@@ -69,6 +69,27 @@ class AlarmTriggerReevaluationServiceTest {
 			.isInstanceOf(ConcurrentAlarmSystemUpdateException.class);
 	}
 
+	/**
+	 * Reproduit le cas explicitement revendiqué par la JavaDoc de la classe :
+	 * un humain désarme le système exactement entre deux tentatives. La
+	 * collision qui fait échouer la première tentative simule cette écriture
+	 * concurrente (le désarmement gagne la course) ; la seconde tentative doit
+	 * relire cet état frais et renoncer, pas écraser le désarmement avec la
+	 * décision périmée "il faut déclencher".
+	 */
+	@Test
+	void reevaluateShouldNotTriggerWhenTheSystemIsDisarmedByAConcurrentWriterBetweenRetries() {
+		this.alarmSystemRepository.seed(AlarmSystem.initial(AlarmSystem.DEFAULT_SYSTEM_ID).arm(ArmingMode.AWAY));
+		this.deviceRepository.save(Device.register(UUID.randomUUID(), DeviceType.CONTACT, "Porte", null).withViolation());
+		this.alarmSystemRepository.disarmOnNextFailure();
+		this.alarmSystemRepository.failNextSaves(1);
+
+		this.service.reevaluate();
+
+		assertThat(this.alarmSystemRepository.findById(AlarmSystem.DEFAULT_SYSTEM_ID).orElseThrow().isTriggered()).isFalse();
+		assertThat(this.alarmStateChangedPublisher.publishedEvents()).isEmpty();
+	}
+
 	private static final class InMemoryDeviceRepository implements DeviceRepository {
 
 		private final Map<UUID, Device> devices = new HashMap<>();
@@ -116,9 +137,21 @@ class AlarmTriggerReevaluationServiceTest {
 		private final Map<String, AlarmSystem> systems = new HashMap<>();
 		private int failuresRemaining;
 		private int saveAttempts;
+		private boolean disarmOnNextFailure;
 
 		void failNextSaves(final int count) {
 			this.failuresRemaining = count;
+		}
+
+		/**
+		 * Simule un humain qui désarme le système au moment précis d'une
+		 * collision : la prochaine fois qu'un {@link #save(AlarmSystem)} échoue,
+		 * l'état persisté est remplacé par un système désarmé avant de lever
+		 * l'exception, comme si l'écriture concurrente qui a gagné la course
+		 * était ce désarmement.
+		 */
+		void disarmOnNextFailure() {
+			this.disarmOnNextFailure = true;
 		}
 
 		/**
@@ -138,6 +171,10 @@ class AlarmTriggerReevaluationServiceTest {
 			this.saveAttempts++;
 			if (this.failuresRemaining > 0) {
 				this.failuresRemaining--;
+				if (this.disarmOnNextFailure) {
+					this.disarmOnNextFailure = false;
+					this.systems.put(alarmSystem.getId(), AlarmSystem.initial(alarmSystem.getId()));
+				}
 				throw new ConcurrentAlarmSystemUpdateException(alarmSystem.getId(), null);
 			}
 			this.systems.put(alarmSystem.getId(), alarmSystem);

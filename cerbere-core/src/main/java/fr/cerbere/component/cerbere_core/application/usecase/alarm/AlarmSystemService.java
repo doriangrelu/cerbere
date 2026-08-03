@@ -2,6 +2,7 @@ package fr.cerbere.component.cerbere_core.application.usecase.alarm;
 
 import fr.cerbere.component.cerbere_core.application.service.AlarmTriggerReevaluationService;
 import fr.cerbere.component.cerbere_core.domain.event.AlarmStateChanged;
+import fr.cerbere.component.cerbere_core.domain.exception.ConcurrentAlarmSystemUpdateException;
 import fr.cerbere.component.cerbere_core.domain.model.AlarmSystem;
 import fr.cerbere.component.cerbere_core.domain.model.ArmingMode;
 import fr.cerbere.component.cerbere_core.domain.port.in.alarm.ArmSystemUseCase;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Implémentation des use-cases d'armement/désarmement/consultation de l'état,
@@ -20,9 +22,19 @@ import java.util.UUID;
  * partagent les mêmes dépendances. Le check "des devices actifs sont-ils déjà
  * en violation" est délégué à {@link AlarmTriggerReevaluationService} (partagé
  * avec la réactivation d'un device — voir ADR 0018) plutôt que dupliqué ici.
+ * <p>
+ * {@code AlarmSystem} est le même document mono-instance ({@code home-1}) que
+ * celui protégé dans {@link AlarmTriggerReevaluationService} : un armement/
+ * désarmement humain peut donc entrer en collision avec le scheduler de
+ * supervision de vie ou le traitement d'un événement de device. {@link #arm}/
+ * {@link #disarm} relisent l'état courant et rejouent leur décision complète
+ * sur {@link ConcurrentAlarmSystemUpdateException}, avec la même borne de
+ * tentatives que {@code AlarmTriggerReevaluationService}.
  */
 @RequiredArgsConstructor
 public final class AlarmSystemService implements ArmSystemUseCase, DisarmSystemUseCase, GetAlarmStatusUseCase {
+
+    private static final int MAX_ATTEMPTS = 5;
 
     private final AlarmSystemRepository alarmSystemRepository;
     private final AlarmStateChangedPublisher alarmStateChangedPublisher;
@@ -30,18 +42,34 @@ public final class AlarmSystemService implements ArmSystemUseCase, DisarmSystemU
 
     @Override
     public AlarmSystem arm(final ArmingMode mode) {
-        AlarmSystem current = this.findOrCreate()
-                .arm(mode);
-        if (this.alarmTriggerReevaluationService.anyEnabledDeviceViolating()) {
-            current = current.trigger();
-        }
-        return this.saveAndPublish(current, current);
+        return this.retrying(() -> {
+            AlarmSystem current = this.findOrCreate().arm(mode);
+            if (this.alarmTriggerReevaluationService.anyEnabledDeviceViolating()) {
+                current = current.trigger();
+            }
+            return this.saveAndPublish(current, current);
+        });
     }
 
     @Override
     public AlarmSystem disarm() {
-        final AlarmSystem current = this.findOrCreate();
-        return this.saveAndPublish(current, current.disarm());
+        return this.retrying(() -> {
+            final AlarmSystem current = this.findOrCreate();
+            return this.saveAndPublish(current, current.disarm());
+        });
+    }
+
+    private AlarmSystem retrying(final Supplier<AlarmSystem> decision) {
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                return decision.get();
+            } catch (final ConcurrentAlarmSystemUpdateException exception) {
+                if (attempt == MAX_ATTEMPTS) {
+                    throw exception;
+                }
+            }
+        }
+        throw new IllegalStateException("Unreachable");
     }
 
     @Override

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * {@code fr.cerbere.shared.web.CommonExceptionHandler} — voir ADR 0013.
  */
 @RestControllerAdvice
-public final class DevicesBridgeExceptionHandler {
+public class DevicesBridgeExceptionHandler {
 
 	@ExceptionHandler(DiscoveredDeviceNotFoundException.class)
 	public ProblemDetail handleDiscoveredDeviceNotFound(final DiscoveredDeviceNotFoundException exception) {

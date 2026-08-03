@@ -1,6 +1,7 @@
 package fr.cerbere.component.cerbere_devices_mock.domain.model;
 
 import fr.cerbere.component.cerbere_devices_mock.domain.exception.UnsupportedDeviceCommandException;
+import lombok.Getter;
 
 import java.util.UUID;
 
@@ -22,6 +23,7 @@ import java.util.UUID;
  * méthodes {@code with*} pour que la vérification de concurrence s'applique à
  * la sauvegarde.
  */
+@Getter
 public final class SimulatedDevice {
 
     private final UUID id;
@@ -88,33 +90,5 @@ public final class SimulatedDevice {
      */
     public SimulatedDevice withOnline(final boolean newOnline) {
         return new SimulatedDevice(this.id, this.type, this.label, this.friendlyName, newOnline, this.currentState, this.version);
-    }
-
-    public UUID getId() {
-        return this.id;
-    }
-
-    public DeviceType getType() {
-        return this.type;
-    }
-
-    public String getLabel() {
-        return this.label;
-    }
-
-    public String getFriendlyName() {
-        return this.friendlyName;
-    }
-
-    public boolean isOnline() {
-        return this.online;
-    }
-
-    public DeviceState getCurrentState() {
-        return this.currentState;
-    }
-
-    public Long getVersion() {
-        return this.version;
     }
 }

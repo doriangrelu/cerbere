@@ -8,9 +8,10 @@ Référence technique détaillée pour [ADR 0002](../adr/0002-enveloppe-evenemen
 
 | Topic | Producteur | Consommateurs | Clé de partition | Statut |
 |---|---|---|---|---|
-| `cerbere.device.events.raw` | `cerbere-devices-mock` | `cerbere-core`, `cerbere-history` | `deviceId` | Implémenté (producteur) |
-| `cerbere.alarm.state-changed` | `cerbere-core` | `cerbere-history`, `cerbere-notification` | `zoneId` \| `systemId="home-1"` | À venir |
-| `cerbere.alarm.alerts` | `cerbere-core` | `cerbere-history`, `cerbere-notification` | `zoneId` \| `systemId="home-1"` | À venir |
+| `cerbere.device.events.raw` | `cerbere-devices-bridge` | `cerbere-core`, `cerbere-history` | `deviceId` | Implémenté |
+| `cerbere.device.state` | `cerbere-core` | `cerbere-devices-bridge` | `deviceId` | Implémenté (ADR 0016) |
+| `cerbere.alarm.state-changed` | `cerbere-core` | `cerbere-history`, `cerbere-devices-bridge`, `cerbere-notification` | `zoneId` \| `systemId="home-1"` | Implémenté |
+| `cerbere.alarm.alerts` | `cerbere-core` | `cerbere-history`, `cerbere-notification` | `zoneId` \| `systemId="home-1"` | Implémenté |
 
 ## Enveloppe d'événement
 

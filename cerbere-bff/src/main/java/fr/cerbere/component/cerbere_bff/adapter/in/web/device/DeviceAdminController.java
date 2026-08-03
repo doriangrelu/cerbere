@@ -103,6 +103,11 @@ public class DeviceAdminController {
 						  @RequestParam(required = false) final String zoneId,
 						  @RequestParam final boolean enabled,
 						  final Model model) {
+		if (zoneId != null && !zoneId.isBlank() && this.zoneCoreClient.listAll().stream().noneMatch(zone -> zone.id().equals(zoneId))) {
+			model.addAttribute(DEVICE_ERROR_ATTRIBUTE, "Zone sélectionnée introuvable.");
+			this.populateModel(model);
+			return DEVICE_SECTION_FRAGMENT;
+		}
 		this.deviceCoreClient.update(id, new UpdateDeviceRequest(label, this.blankToNull(zoneId), !enabled));
 		this.populateModel(model);
 		return DEVICE_SECTION_FRAGMENT;

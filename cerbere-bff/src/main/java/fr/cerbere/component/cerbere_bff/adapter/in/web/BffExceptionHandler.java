@@ -37,7 +37,7 @@ import org.springframework.web.client.RestClientException;
  */
 @ControllerAdvice
 @RequiredArgsConstructor
-public final class BffExceptionHandler {
+public class BffExceptionHandler {
 
 	private static final String HTMX_REQUEST_HEADER = "HX-Request";
 	private static final String GENERIC_ERROR_VIEW = "error";

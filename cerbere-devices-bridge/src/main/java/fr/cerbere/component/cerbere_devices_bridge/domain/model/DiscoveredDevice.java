@@ -1,5 +1,7 @@
 package fr.cerbere.component.cerbere_devices_bridge.domain.model;
 
+import lombok.Getter;
+
 import java.time.Instant;
 
 /**
@@ -12,6 +14,7 @@ import java.time.Instant;
  * retourne une nouvelle instance. {@code inferredType} est déduit de la forme du
  * payload reçu ; {@code null} tant qu'aucun payload reconnaissable n'a été vu.
  */
+@Getter
 public final class DiscoveredDevice {
 
 	private final String friendlyName;
@@ -50,21 +53,5 @@ public final class DiscoveredDevice {
 	public DiscoveredDevice seenAgain(final DeviceType newInferredType, final Instant seenAt) {
 		final DeviceType retained = newInferredType != null ? newInferredType : this.inferredType;
 		return new DiscoveredDevice(this.friendlyName, retained, seenAt, this.version);
-	}
-
-	public String getFriendlyName() {
-		return this.friendlyName;
-	}
-
-	public DeviceType getInferredType() {
-		return this.inferredType;
-	}
-
-	public Instant getLastSeenAt() {
-		return this.lastSeenAt;
-	}
-
-	public Long getVersion() {
-		return this.version;
 	}
 }

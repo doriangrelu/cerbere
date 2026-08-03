@@ -8,6 +8,7 @@ import fr.cerbere.component.cerbere_core.domain.port.in.device.CheckDeviceHeartb
 import fr.cerbere.component.cerbere_core.domain.port.out.alarm.AlertPublisher;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceRepository;
 import fr.cerbere.component.cerbere_core.domain.port.out.device.DeviceSupervisionChangedPublisher;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -30,22 +31,13 @@ import java.util.UUID;
  * pas de son ressort : il émet {@link DeviceSupervisionChanged} et c'est
  * {@code ReevaluateAlarmStateService} qui en dérive l'état (voir ADR 0025).
  */
+@RequiredArgsConstructor
 public final class CheckDeviceHeartbeatsService implements CheckDeviceHeartbeatsUseCase {
 
 	private final DeviceRepository deviceRepository;
 	private final DeviceSupervisionChangedPublisher supervisionChangedPublisher;
 	private final AlertPublisher alertPublisher;
 	private final Duration timeout;
-
-	public CheckDeviceHeartbeatsService(final DeviceRepository deviceRepository,
-										 final DeviceSupervisionChangedPublisher supervisionChangedPublisher,
-										 final AlertPublisher alertPublisher,
-										 final Duration timeout) {
-		this.deviceRepository = deviceRepository;
-		this.supervisionChangedPublisher = supervisionChangedPublisher;
-		this.alertPublisher = alertPublisher;
-		this.timeout = timeout;
-	}
 
 	@Override
 	public void check() {

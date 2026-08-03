@@ -51,14 +51,22 @@ public class ZoneAdminController {
 
 	@PostMapping("/zones")
 	public String register(@RequestParam final String name, final Model model) {
-		this.zoneCoreClient.register(new RegisterZoneRequest(name));
+		try {
+			this.zoneCoreClient.register(new RegisterZoneRequest(name));
+		} catch (final HttpClientErrorException exception) {
+			model.addAttribute(ZONE_ERROR_ATTRIBUTE, this.problemDetailMessages.extractDetail(exception));
+		}
 		model.addAttribute(ZONES_ATTRIBUTE, this.zoneRows());
 		return ZONE_TABLE_FRAGMENT;
 	}
 
 	@PutMapping("/zones/{id}")
 	public String rename(@PathVariable final String id, @RequestParam final String name, final Model model) {
-		this.zoneCoreClient.update(id, new UpdateZoneRequest(name));
+		try {
+			this.zoneCoreClient.update(id, new UpdateZoneRequest(name));
+		} catch (final HttpClientErrorException exception) {
+			model.addAttribute(ZONE_ERROR_ATTRIBUTE, this.problemDetailMessages.extractDetail(exception));
+		}
 		model.addAttribute(ZONES_ATTRIBUTE, this.zoneRows());
 		return ZONE_TABLE_FRAGMENT;
 	}

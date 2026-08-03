@@ -17,7 +17,7 @@ import java.util.UUID;
  * pour que {@code cerbere-devices-mock} crée son miroir — voir ADR 0016.
  */
 @RequiredArgsConstructor
-public class RegisterDeviceService implements RegisterDeviceUseCase {
+public final class RegisterDeviceService implements RegisterDeviceUseCase {
 
     private final DeviceRepository deviceRepository;
     private final DevicePublisher publisher;

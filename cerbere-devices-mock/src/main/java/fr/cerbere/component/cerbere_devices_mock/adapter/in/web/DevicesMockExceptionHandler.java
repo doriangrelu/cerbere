@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * {@code fr.cerbere.shared.web.CommonExceptionHandler} — voir ADR 0013.
  */
 @RestControllerAdvice
-public final class DevicesMockExceptionHandler {
+public class DevicesMockExceptionHandler {
 
 	@ExceptionHandler(DeviceNotFoundException.class)
 	public ProblemDetail handleDeviceNotFound(final DeviceNotFoundException exception) {

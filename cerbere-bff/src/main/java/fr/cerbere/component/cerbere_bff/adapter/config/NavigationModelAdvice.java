@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
  * l'affichage de l'entrée de menu correspondante.
  */
 @ControllerAdvice
-public final class NavigationModelAdvice {
+public class NavigationModelAdvice {
 
 	@ModelAttribute("testModeEnabled")
 	public boolean testModeEnabled(@Value("${cerbere.bff.test-mode.enabled:false}") final boolean testModeEnabled) {

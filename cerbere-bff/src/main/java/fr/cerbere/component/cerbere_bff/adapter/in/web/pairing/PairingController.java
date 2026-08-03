@@ -58,16 +58,24 @@ public class PairingController {
 	public String pair(@RequestParam final String friendlyName,
 						@RequestParam final String coreDeviceId,
 						final Model model) {
-		if (!this.isPairable(friendlyName, coreDeviceId)) {
+		final List<DiscoveredDeviceResponse> discoveredDevices = this.deviceBridgeClient.listDiscoveredDevices();
+		final List<DeviceResponse> pairableDevices = this.pairableDevices();
+
+		if (!this.isPairable(friendlyName, coreDeviceId, discoveredDevices, pairableDevices)) {
 			model.addAttribute(PAIRING_ERROR_ATTRIBUTE, "Device sélectionné introuvable, déjà apparié, ou de type incompatible.");
-			this.populateModel(model);
+			this.populateModel(model, discoveredDevices, pairableDevices);
 			return PAIRING_SECTION_FRAGMENT;
 		}
 		try {
 			this.deviceBridgeClient.pair(friendlyName, coreDeviceId);
 		} catch (final HttpClientErrorException exception) {
 			model.addAttribute(PAIRING_ERROR_ATTRIBUTE, this.problemDetailMessages.extractDetail(exception));
+			this.populateModel(model, discoveredDevices, pairableDevices);
+			return PAIRING_SECTION_FRAGMENT;
 		}
+		// L'appairage vient de changer l'état côté Bridge/Core (friendlyName renommé,
+		// device désormais lié) : le rendu doit repartir d'une lecture fraîche,
+		// jamais du snapshot pris avant l'appel.
 		this.populateModel(model);
 		return PAIRING_SECTION_FRAGMENT;
 	}
@@ -76,22 +84,28 @@ public class PairingController {
 	 * Revérifie que la cible existe, n'est pas déjà appairée, et que son type
 	 * correspond bien à celui détecté sur le device physique.
 	 */
-	private boolean isPairable(final String friendlyName, final String coreDeviceId) {
-		final DiscoveredDeviceResponse discovered = this.deviceBridgeClient.listDiscoveredDevices().stream()
+	private boolean isPairable(final String friendlyName, final String coreDeviceId,
+							   final List<DiscoveredDeviceResponse> discoveredDevices,
+							   final List<DeviceResponse> pairableDevices) {
+		final DiscoveredDeviceResponse discovered = discoveredDevices.stream()
 			.filter(device -> device.friendlyName().equals(friendlyName))
 			.findFirst()
 			.orElse(null);
 		if (discovered == null) {
 			return false;
 		}
-		return this.pairableDevices().stream()
+		return pairableDevices.stream()
 			.filter(device -> device.id().equals(coreDeviceId))
 			.anyMatch(device -> this.typesMatch(discovered, device));
 	}
 
 	private void populateModel(final Model model) {
-		final List<DeviceResponse> pairableDevices = this.pairableDevices();
-		final List<DiscoveredDeviceRow> rows = this.deviceBridgeClient.listDiscoveredDevices().stream()
+		this.populateModel(model, this.deviceBridgeClient.listDiscoveredDevices(), this.pairableDevices());
+	}
+
+	private void populateModel(final Model model, final List<DiscoveredDeviceResponse> discoveredDevices,
+							   final List<DeviceResponse> pairableDevices) {
+		final List<DiscoveredDeviceRow> rows = discoveredDevices.stream()
 			.map(device -> this.toRow(device, pairableDevices))
 			.toList();
 		model.addAttribute(DISCOVERED_DEVICES_ATTRIBUTE, rows);

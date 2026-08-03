@@ -1,6 +1,7 @@
 package fr.cerbere.component.cerbere_devices_bridge.domain.model;
 
 import fr.cerbere.component.cerbere_devices_bridge.domain.exception.UnsupportedDeviceStateException;
+import lombok.Getter;
 
 import java.util.UUID;
 
@@ -14,6 +15,7 @@ import java.util.UUID;
  * retourne une nouvelle instance. {@code version} porte le numéro de version
  * optimiste Mongo, {@code null} tant que non persisté.
  */
+@Getter
 public final class BridgedDevice {
 
 	private final UUID id;
@@ -66,29 +68,5 @@ public final class BridgedDevice {
 	 */
 	public BridgedDevice withLabelAndZone(final String newLabel, final UUID newZoneId) {
 		return new BridgedDevice(this.id, this.type, newLabel, newZoneId, this.lastKnownState, this.version);
-	}
-
-	public UUID getId() {
-		return this.id;
-	}
-
-	public DeviceType getType() {
-		return this.type;
-	}
-
-	public String getLabel() {
-		return this.label;
-	}
-
-	public UUID getZoneId() {
-		return this.zoneId;
-	}
-
-	public DeviceState getLastKnownState() {
-		return this.lastKnownState;
-	}
-
-	public Long getVersion() {
-		return this.version;
 	}
 }

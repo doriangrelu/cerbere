@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * de chaque module) — voir ADR 0013.
  */
 @RestControllerAdvice
-public final class CommonExceptionHandler {
+public class CommonExceptionHandler {
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ProblemDetail handleValidation(final MethodArgumentNotValidException exception) {

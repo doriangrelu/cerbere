@@ -1,6 +1,7 @@
 package fr.cerbere.component.cerbere_core.adapter.in.web;
 
 import fr.cerbere.component.cerbere_core.domain.exception.AlarmNotArmedException;
+import fr.cerbere.component.cerbere_core.domain.exception.ConcurrentAlarmSystemUpdateException;
 import fr.cerbere.component.cerbere_core.domain.exception.DeviceNotFoundException;
 import fr.cerbere.component.cerbere_core.domain.exception.DuplicateDeviceLabelException;
 import fr.cerbere.component.cerbere_core.domain.exception.DuplicateZoneNameException;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * gérées par {@code fr.cerbere.shared.web.CommonExceptionHandler} — voir ADR 0013.
  */
 @RestControllerAdvice
-public final class CoreExceptionHandler {
+public class CoreExceptionHandler {
 
 	@ExceptionHandler(DeviceNotFoundException.class)
 	public ProblemDetail handleDeviceNotFound(final DeviceNotFoundException exception) {
@@ -58,6 +59,14 @@ public final class CoreExceptionHandler {
 	public ProblemDetail handleDuplicateZoneName(final DuplicateZoneNameException exception) {
 		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 		problemDetail.setTitle("Duplicate zone name");
+		return problemDetail;
+	}
+
+	@ExceptionHandler(ConcurrentAlarmSystemUpdateException.class)
+	public ProblemDetail handleConcurrentAlarmSystemUpdate(final ConcurrentAlarmSystemUpdateException exception) {
+		final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+			"Le système d'alarme vient d'être modifié concurremment, réessayez.");
+		problemDetail.setTitle("Concurrent alarm system update");
 		return problemDetail;
 	}
 }
